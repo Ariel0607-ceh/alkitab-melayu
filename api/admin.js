@@ -6,9 +6,12 @@ const ops = {
   tr: (b) => sql`insert into translations(id,name,translator,year,century) values(${b.id},${b.name},${b.translator || ""},${b.year || ""},${cen(b.century)}) on conflict(id) do update set name=excluded.name, translator=excluded.translator, year=excluded.year, century=excluded.century`,
   delTr: (b) => sql`delete from translations where id=${b.id}`,
   book: (b) => b.old
-    ? sql`update books set code=${b.c}, name=${b.n}, chapters=${+b.ch}, grp=${b.g} where code=${b.old}`
-    : sql`insert into books(code,name,chapters,grp,pos) values(${b.c},${b.n},${+b.ch},${b.g},(select coalesce(max(pos),0)+1 from books))`,
+    ? sql`update books set code=${b.c}, name=${b.n}, name_en=${b.en || null}, chapters=${+b.ch}, grp=${b.g} where code=${b.old}`
+    : sql`insert into books(code,name,name_en,chapters,grp,pos) values(${b.c},${b.n},${b.en || null},${+b.ch},${b.g},(select coalesce(max(pos),0)+1 from books))`,
   delBook: (b) => sql`delete from books where code=${b.c}`,
+  bookName: (b) => b.name
+    ? sql`insert into book_names(tid,book,name) values(${b.tid},${b.book},${String(b.name).slice(0, 100)}) on conflict(tid,book) do update set name=excluded.name`
+    : sql`delete from book_names where tid=${b.tid} and book=${b.book}`,
   async move(b) {
     const [me] = await sql`select pos, grp from books where code=${b.c}`;
     const [o] = b.dir < 0

@@ -73,6 +73,7 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
 .dd.ch .dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px}
 .dd.ch .do{text-align:center;padding:9px 0;border:1px solid var(--line);font-size:18px}.dd.ch .do.on{background:var(--gold);color:var(--bg);border-color:var(--gold)}
 @media(max-width:760px){.dd{position:static}.card{position:relative}.ddp,.dd.ch .ddp,.dd.cen .ddp{left:22px;right:22px;width:auto;top:auto;margin-top:8px}}
+.bkn{display:block;font:italic 500 17px "Cormorant Garamond",Georgia,serif;color:var(--ink);text-transform:none;letter-spacing:0;margin-top:2px}
 </style>
 </head>
 <body>
@@ -102,7 +103,7 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
   <div class="card" style="max-width:420px;margin:0 auto"><label>Kata laluan</label><input id="pw" type="password" autocomplete="current-password" style="width:100%"><div class="bar" style="margin-top:14px"><button class="btn gold" id="login">Log masuk</button></div></div>
 </section>
 <section id="v-admin" class="hide">
-  <div class="hero"><h1>Ruang Admin</h1><p>Masukkan ayat satu demi satu</p><div class="orn"></div></div>
+  <div class="hero"><h1>Ruang Admin</h1><div class="orn"></div></div>
   <div class="grid2">
     <div style="display:grid;gap:22px">
       <div class="card">
@@ -122,6 +123,7 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
       <h3>Tambah ayat</h3>
       <div class="row"><div><label>Terjemahan</label><select id="aTr"></select></div></div>
       <div class="row r3"><div><label>Kitab</label><select id="aBook"></select></div><div><label>Pasal</label><input id="aCh" type="number" min="1" value="1"></div><div><label>Ayat</label><input id="aV" type="number" min="1" value="1"></div></div>
+      <div class="row"><div><label>Nama kitab dalam terjemahan ini</label><input id="aBN"></div></div>
       <div class="row"><div><label>Teks ayat</label><textarea id="aText" placeholder="Taip ayat di sini…"></textarea></div></div>
       <div class="bar"><button class="btn gold" id="aSave">Simpan &amp; seterusnya</button><span style="color:var(--mute);font-size:12px">Ctrl + Enter</span></div>
       <h3 style="margin-top:28px" id="aHead">Ayat dalam pasal ini</h3>
@@ -132,7 +134,7 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
     <h3>Kitab &amp; kategori</h3>
     <div class="grid2" style="margin-top:0;grid-template-columns:1fr 1.4fr">
       <div>
-        <div class="row"><div><label>Nama kitab</label><input id="bName" placeholder="cth. Kejadian"></div></div>
+        <div class="row r2"><div><label>Nama Inggeris (universal)</label><input id="bEn" placeholder="Genesis"></div><div><label>Nama Melayu (lalai)</label><input id="bName" placeholder="Kejadian"></div></div>
         <div class="row r3"><div><label>Kod</label><input id="bCode" placeholder="GEN" maxlength="6"></div><div><label>Pasal</label><input id="bCh" type="number" min="1" value="1"></div><div><label>Kategori</label><select id="bGrp"></select></div></div>
         <div class="bar"><button class="btn gold" id="bAdd">Tambah kitab</button><button class="btn hide" id="bCancel">Batal</button></div>
         <div style="height:24px"></div>
@@ -160,11 +162,11 @@ const KEY="am-ui";let mem=null;
 function lget(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lset(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 let S;
-function load(){let u=null;try{u=JSON.parse(lget(KEY))}catch(e){}S={tr:[],v:{},books:[],groups:[],admin:false,ui:u&&u.b?u:{b:"GEN",c:1,sel:[]}}}
+function load(){let u=null;try{u=JSON.parse(lget(KEY))}catch(e){}S={tr:[],v:{},names:{},books:[],groups:[],admin:false,ui:u&&u.b?u:{b:"GEN",c:1,sel:[]}}}
 const save=()=>lset(KEY,JSON.stringify(S.ui));
 function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),1800)}
 const vk=(t,b,c,v)=>`${t}|${b}|${c}|${v}`;
-const optBooks=()=>GROUPS.map(g=>`<optgroup label="${g[0]}">${g[1].map(b=>`<option value="${b.c}">${b.n}</option>`).join("")}</optgroup>`).join("");
+const optBooks=()=>GROUPS.map(g=>`<optgroup label="${g[0]}">${g[1].map(b=>`<option value="${b.c}">${esc(bn(b))}</option>`).join("")}</optgroup>`).join("");
 const optNums=n=>Array.from({length:n},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
 
 /* theme */
@@ -186,10 +188,10 @@ async function renderReader(){
  if(!sel.length){R.innerHTML=`<div class="empty">Pilih satu atau lebih terjemahan untuk mula membaca.</div>`;return}
  const nums=new Set();sel.forEach(t=>{for(const k in S.v){const p=k.split("|");if(p[0]===t.id&&p[1]===u.b&&+p[2]===u.c)nums.add(+p[3])}});
  const vs=[...nums].sort((a,b)=>a-b);
- let h=`<div class="title">${b.n} ${u.c}</div>`;
+ let h=`<div class="title">${esc(bn(b))} ${u.c}</div>`;
  if(!vs.length)h+=`<div class="empty">Belum ada ayat untuk pasal ini.</div>`;
- else{h+=`<div style="--n:${sel.length}"><div class="vhead" style="--n:${sel.length}"><span></span>${sel.map(t=>`<span>${esc(t.name)}<small>${esc(t.translator||"")}</small></span>`).join("")}</div>`;
-  h+=vs.map(v=>`<div class="vrow" style="--n:${sel.length}"><div class="vn">${v}</div>${sel.map(t=>{const x=S.v[vk(t.id,u.b,u.c,v)];return `<div class="vt ${x?"":"none"}"><span class="lbl">${esc(t.name)}</span>${x?esc(x):"—"}</div>`}).join("")}</div>`).join("")+`</div>`}
+ else{h+=`<div style="--n:${sel.length}"><div class="vhead" style="--n:${sel.length}"><span></span>${sel.map(t=>`<span>${esc(t.name)}<small>${esc(t.translator||"")}</small><em class="bkn">${esc(bkName(t.id,u.b))}</em></span>`).join("")}</div>`;
+  h+=vs.map(v=>`<div class="vrow" style="--n:${sel.length}"><div class="vn">${v}</div>${sel.map(t=>{const x=S.v[vk(t.id,u.b,u.c,v)];return `<div class="vt ${x?"":"none"}"><span class="lbl">${esc(t.name)} · ${esc(bkName(t.id,u.b))}</span>${x?esc(x):"—"}</div>`}).join("")}</div>`).join("")+`</div>`}
  h+=`<div class="pager"><button class="btn" id="prev">← Sebelum</button><button class="btn" id="next">Seterusnya →</button></div>`;
  R.innerHTML=h;$("prev").onclick=()=>step(-1);$("next").onclick=()=>step(1);
 }
@@ -208,23 +210,23 @@ async function renderAdmin(){
  if(S.tr.some(t=>t.id===keepT))$("aTr").value=keepT;
  let kb=$("aBook").value;if(!BK[kb])kb=BK[S.ui.b]?S.ui.b:BOOKS[0].c;$("aBook").innerHTML=optBooks();$("aBook").value=kb;
  $("tList").innerHTML=S.tr.map(t=>`<div class="item"><div><p>${esc(t.name)}</p><small>${esc(t.translator||"—")}${t.year?" · "+esc(t.year):""} · abad ${t.century} · ${t.cnt} ayat</small></div><div class="acts"><button class="btn sm" data-ed="${t.id}">Ubah</button><button class="btn sm del" data-del="${t.id}">Padam</button></div></div>`).join("")||`<small style="color:var(--mute)">Belum ada terjemahan.</small>`;
- renderList();renderBooks();ddSync();
+ renderList();renderBooks();ddSync();fillBN();
 }
 async function renderList(){
  const t=$("aTr").value,b=$("aBook").value,c=+$("aCh").value||1;if(t)try{await getVerses([t],b,c)}catch(e){}
- $("aHead").textContent=`Ayat dalam ${BK[b].n} ${c}`;
+ $("aHead").textContent=`Ayat dalam ${bn(BK[b])} ${c}`;
  const rows=Object.keys(S.v).map(k=>k.split("|")).filter(p=>p[0]===t&&p[1]===b&&+p[2]===c).map(p=>+p[3]).sort((x,y)=>x-y);
  $("aList").innerHTML=rows.map(v=>`<div class="item"><div><small>Ayat ${v}</small><p>${esc(S.v[vk(t,b,c,v)])}</p></div><div class="acts"><button class="btn sm" data-edit="${v}">Ubah</button><button class="btn sm del" data-rm="${v}">Padam</button></div></div>`).join("")||`<small style="color:var(--mute)">Belum ada ayat.</small>`;
 }
 function fillText(){const x=S.v[vk($("aTr").value,$("aBook").value,+$("aCh").value,+$("aV").value)];$("aText").value=x||""}
-["aTr","aBook","aCh"].forEach(id=>$(id).addEventListener("change",()=>{S.ui.b=$("aBook").value;renderList().then(fillText)}));
+["aTr","aBook","aCh"].forEach(id=>$(id).addEventListener("change",()=>{S.ui.b=$("aBook").value;renderList().then(fillText);fillBN()}));
 $("aV").addEventListener("input",fillText);
 $("aBook").addEventListener("change",()=>{const m=BK[$("aBook").value].ch;$("aCh").max=m;if(+$("aCh").value>m)$("aCh").value=m;renderList()});
 async function saveVerse(){
  const t=$("aTr").value,b=$("aBook").value,c=+$("aCh").value,v=+$("aV").value,x=$("aText").value.trim();
  if(!t)return toast("Tambah terjemahan dahulu");if(!c||!v)return toast("Isi pasal dan ayat");if(!x)return toast("Teks ayat kosong");
  try{await op({op:"verse",tid:t,book:b,ch:c,v,text:x})}catch(e){return toast(e.message)}S.v[vk(t,b,c,v)]=x;S.ui.b=b;S.ui.c=c;if(!S.ui.sel.includes(t)&&S.ui.sel.length<4)S.ui.sel.push(t);save();
- $("aV").value=v+1;$("aText").value=S.v[vk(t,b,c,v+1)]||"";renderAdmin();$("aText").focus();toast(`Disimpan — ${BK[b].n} ${c}:${v}`)}
+ $("aV").value=v+1;$("aText").value=S.v[vk(t,b,c,v+1)]||"";renderAdmin();$("aText").focus();toast(`Disimpan — ${bn(BK[b])} ${c}:${v}`)}
 $("aSave").onclick=saveVerse;
 $("aText").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();saveVerse()}});
 $("aList").onclick=async e=>{const t=$("aTr").value,b=$("aBook").value,c=+$("aCh").value;
@@ -247,20 +249,20 @@ let tEdit=null,bEdit=null,gEdit=null;
 const cenOf=y=>{y=parseInt(y);return y>0?Math.ceil(y/100):0};
 function ask(msg,label="Padam"){return new Promise(r=>{const m=document.createElement("div");m.className="modal";m.innerHTML=`<div class="box"><p>${esc(msg)}</p><div class="bar" style="justify-content:flex-end"><button class="btn" data-v="0">Batal</button><button class="btn red" data-v="1">${esc(label)}</button></div></div>`;m.onclick=e=>{const v=e.target.dataset.v;if(v!==undefined||e.target===m){m.remove();r(v==="1")}};document.body.appendChild(m);m.querySelector("[data-v='0']").focus()})}
 function resetT(){tEdit=null;["tName","tAuth","tYear"].forEach(i=>$(i).value="");$("tAdd").textContent="Tambah terjemahan";$("tCancel").classList.add("hide")}
-function resetB(){bEdit=null;["bName","bCode"].forEach(i=>$(i).value="");$("bCh").value=1;$("bAdd").textContent="Tambah kitab";$("bCancel").classList.add("hide")}
+function resetB(){bEdit=null;["bName","bEn","bCode"].forEach(i=>$(i).value="");$("bCh").value=1;$("bAdd").textContent="Tambah kitab";$("bCancel").classList.add("hide")}
 $("tYear").oninput=()=>{const c=cenOf($("tYear").value);if(c>=17&&c<=21)$("tCen").value=String(c)};
 $("tCancel").onclick=resetT;$("bCancel").onclick=resetB;
 function renderBooks(){const kg=$("bGrp").value;$("bGrp").innerHTML=S.groups.map(g=>`<option>${esc(g)}</option>`).join("");if(S.groups.includes(kg))$("bGrp").value=kg;
- $("bList").innerHTML=GROUPS.map(([g,bs])=>`<div class="item" style="border-bottom-color:var(--gold)"><div><p style="font-size:22px;color:var(--gold)">${esc(g)}</p><small>${bs.length} kitab</small></div><div class="acts"><button class="btn sm" data-gen="${esc(g)}">Ubah</button><button class="btn sm del" data-gdel="${esc(g)}">Padam</button></div></div>`+bs.map(b=>`<div class="item"><div><p>${esc(b.n)}</p><small>${esc(b.c)} · ${b.ch} pasal</small></div><div class="acts"><button class="btn sm" data-up="${esc(b.c)}">↑</button><button class="btn sm" data-dn="${esc(b.c)}">↓</button><button class="btn sm" data-bed="${esc(b.c)}">Ubah</button><button class="btn sm del" data-bdel="${esc(b.c)}">Padam</button></div></div>`).join("")).join("")}
+ $("bList").innerHTML=GROUPS.map(([g,bs])=>`<div class="item" style="border-bottom-color:var(--gold)"><div><p style="font-size:22px;color:var(--gold)">${esc(g)}</p><small>${bs.length} kitab</small></div><div class="acts"><button class="btn sm" data-gen="${esc(g)}">Ubah</button><button class="btn sm del" data-gdel="${esc(g)}">Padam</button></div></div>`+bs.map(b=>`<div class="item"><div><p>${esc(bn(b))}</p><small>${esc(b.n)} · ${esc(b.c)} · ${b.ch} pasal</small></div><div class="acts"><button class="btn sm" data-up="${esc(b.c)}">↑</button><button class="btn sm" data-dn="${esc(b.c)}">↓</button><button class="btn sm" data-bed="${esc(b.c)}">Ubah</button><button class="btn sm del" data-bdel="${esc(b.c)}">Padam</button></div></div>`).join("")).join("")}
 $("bAdd").onclick=async()=>{const n=$("bName").value.trim(),c=$("bCode").value.trim().toUpperCase().replace(/[|\s]/g,""),ch=Math.max(1,+$("bCh").value||1),g=$("bGrp").value;
  if(!n||!c||!g)return toast("Nama, kod dan kategori diperlukan");
- const was=bEdit;try{await op({op:"book",old:was,c,n,ch,g})}catch(e){return toast(e.message)}
+ const was=bEdit;try{await op({op:"book",old:was,c,n,ch,g,en:$("bEn").value.trim()})}catch(e){return toast(e.message)}
  if(was&&S.ui.b===was)S.ui.b=c;resetB();save();renderAdmin();toast(was?"Kitab dikemas kini":"Kitab ditambah")};
 $("gAdd").onclick=async()=>{const g=$("gName").value.trim();if(!g)return toast("Nama kategori diperlukan");
  try{await op({op:"group",old:gEdit,name:g})}catch(e){return toast(e.message)}
  gEdit=null;$("gName").value="";$("gAdd").textContent="Tambah";renderAdmin()};
 $("bList").onclick=async e=>{const d=e.target.dataset;
- if(d.bed){const b=BK[d.bed];bEdit=b.c;$("bName").value=b.n;$("bCode").value=b.c;$("bCh").value=b.ch;$("bGrp").value=b.g;$("bAdd").textContent="Simpan perubahan";$("bCancel").classList.remove("hide");$("bName").focus()}
+ if(d.bed){const b=BK[d.bed];bEdit=b.c;$("bName").value=b.n;$("bEn").value=b.en||"";$("bCode").value=b.c;$("bCh").value=b.ch;$("bGrp").value=b.g;$("bAdd").textContent="Simpan perubahan";$("bCancel").classList.remove("hide");$("bName").focus()}
  if(d.bdel){if(BOOKS.length<2)return toast("Mesti ada sekurang-kurangnya satu kitab");const id=d.bdel,b=BK[id];if(await ask(`Padam ${b.n} dan ${b.cnt} ayat di dalamnya?`)){try{await op({op:"delBook",c:id})}catch(x){return toast(x.message)}if(bEdit===id)resetB();renderAdmin()}}
  if(d.up||d.dn){try{await op({op:"move",c:d.up||d.dn,dir:d.up?-1:1})}catch(x){return toast(x.message)}renderAdmin()}
  if(d.gen){gEdit=d.gen;$("gName").value=d.gen;$("gAdd").textContent="Simpan";$("gName").focus()}
@@ -269,13 +271,17 @@ $("bList").onclick=async e=>{const d=e.target.dataset;
 /* server API */
 async function api(u,o){const r=await fetch(u,o&&{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Ralat "+r.status);return d}
 const op=o=>api("/api/admin",o);
-async function refresh(){const m=await api("/api/meta");S.tr=m.translations;S.books=m.books;S.groups=m.groups;S.admin=m.admin;rebuild()}
+async function refresh(){const m=await api("/api/meta");S.tr=m.translations;S.books=m.books;S.names=Object.fromEntries((m.names||[]).map(x=>[x.tid+"|"+x.book,x.name]));S.groups=m.groups;S.admin=m.admin;rebuild()}
 async function getVerses(ids,b,c){const rows=await api(`/api/verses?book=${encodeURIComponent(b)}&ch=${c}&t=${ids.join(",")}`);for(const k of Object.keys(S.v)){const p=k.split("|");if(p[1]===b&&+p[2]===c&&ids.includes(p[0]))delete S.v[k]}rows.forEach(r=>S.v[vk(r.tid,b,c,r.v)]=r.text)}
 async function doLogin(){try{await api("/api/login",{password:$("pw").value});$("pw").value="";S.admin=true;try{await refresh()}catch(e){}route()}catch(e){toast(e.message)}}
 $("login").onclick=doLogin;$("pw").onkeydown=e=>{if(e.key==="Enter")doLogin()};
 $("out").onclick=async()=>{await fetch("/api/login",{method:"DELETE"});S.admin=false;location.hash="#baca";route()};
 async function boot(){try{await refresh()}catch(e){document.querySelector("main").insertAdjacentHTML("afterbegin",'<div class="card empty">Pangkalan data belum disediakan. Log masuk di #admin, kemudian buka /api/setup</div>');S.books=DEF.map(b=>({...b}));S.groups=[...new Set(DEF.map(b=>b.g))];rebuild()}
  S.ui.sel=S.ui.sel.filter(id=>S.tr.some(t=>t.id===id));if(!BK[S.ui.b])S.ui.b=BOOKS[0].c;route()}
+const bn=b=>b.en||b.n;
+const bkName=(tid,c)=>S.names[tid+"|"+c]||(BK[c]?BK[c].n:c);
+function fillBN(){const t=$("aTr").value,b=$("aBook").value;$("aBN").value=S.names[t+"|"+b]||"";$("aBN").placeholder=BK[b]?"Lalai: "+BK[b].n:""}
+$("aBN").onchange=async()=>{const t=$("aTr").value,b=$("aBook").value;if(!t)return;const name=$("aBN").value.trim();try{await op({op:"bookName",tid:t,book:b,name})}catch(e){return toast(e.message)}if(name)S.names[t+"|"+b]=name;else delete S.names[t+"|"+b];toast("Nama kitab disimpan")};
 /* custom dropdowns */
 const DDS=[];
 function closeDD(){document.querySelectorAll(".dd.open").forEach(d=>d.classList.remove("open"))}
