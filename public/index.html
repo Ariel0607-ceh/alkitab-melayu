@@ -56,6 +56,23 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 .hide{display:none!important}
 @media(max-width:760px){.grid2{grid-template-columns:1fr}.vhead{display:none}.vrow{grid-template-columns:2rem minmax(0,1fr);gap:8px 12px}.vrow .vt{grid-column:2}.vt .lbl{display:block;font:500 10px Inter;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}.logo{font-size:21px}nav a{padding:7px 12px}}
+
+.dd{position:relative}
+.ddb{width:100%;min-width:190px;display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 16px;font:500 20px/1.2 "Cormorant Garamond",Georgia,serif;transition:.2s}
+.ddb:hover,.dd.open .ddb{border-color:var(--gold);box-shadow:0 0 0 3px var(--goldbg)}
+.ddb i{width:8px;height:8px;border-right:1.5px solid var(--gold);border-bottom:1.5px solid var(--gold);transform:rotate(45deg) translateY(-2px);transition:.2s;flex-shrink:0}
+.dd.open .ddb i{transform:rotate(225deg) translateY(-2px)}
+.ddp{display:none;position:absolute;z-index:30;top:calc(100% + 8px);left:0;min-width:100%;width:300px;max-height:min(360px,60vh);overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px;box-shadow:0 24px 60px -18px rgba(0,0,0,.6);scrollbar-width:thin;scrollbar-color:var(--gold) transparent}
+.dd.open .ddp{display:block;animation:ddin .18s ease}
+@keyframes ddin{from{opacity:0;transform:translateY(-6px)}}
+.dd.ch .ddp{width:330px}.dd.cen .ddp{width:210px;left:auto;right:0}
+.dds{position:sticky;top:-8px;margin:-8px -8px 6px;padding:10px;background:var(--panel);z-index:1;border-bottom:1px solid var(--line)}.dds input{width:100%;padding:8px 12px;font-size:14px}
+.dg{font:600 10px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);padding:12px 12px 6px}
+.do{display:block;width:100%;text-align:left;cursor:pointer;background:none;border:0;color:var(--ink);padding:8px 12px;border-radius:8px;font:400 19px/1.3 "Cormorant Garamond",Georgia,serif;transition:.15s}
+.do:hover{background:var(--goldbg)}.do.on{color:var(--gold);font-weight:600;background:var(--goldbg)}
+.dd.ch .dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px}
+.dd.ch .do{text-align:center;padding:9px 0;border:1px solid var(--line);font-size:18px}.dd.ch .do.on{background:var(--gold);color:var(--bg);border-color:var(--gold)}
+@media(max-width:760px){.dd{position:static}.card{position:relative}.ddp,.dd.ch .ddp,.dd.cen .ddp{left:22px;right:22px;width:auto;top:auto;margin-top:8px}}
 </style>
 </head>
 <body>
@@ -68,7 +85,7 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
 </header>
 <main>
 <section id="v-baca">
-  <div class="hero"><h1>Kitab Suci dalam Bahasa Melayu</h1><p>Terjemahan dari abad ke-17 hingga ke-20, bersebelahan</p><div class="orn"></div></div>
+  <div class="hero"><h1><span style="color:var(--gold)">Alkitab</span> dalam Bahasa Melayu</h1><p>Terjemahan dari abad ke-17 hingga ke-20, bersebelahan</p><div class="orn"></div></div>
   <div class="card">
     <div class="bar">
       <div><label>Kitab</label><select id="rBook"></select></div>
@@ -162,7 +179,7 @@ addEventListener("hashchange",route);
 /* reader */
 async function renderReader(){
  const u=S.ui,cen=$("rCen").value;
- $("rBook").innerHTML=optBooks();if(!BK[u.b])u.b=BOOKS[0].c;$("rBook").value=u.b;$("rCh").innerHTML=optNums(BK[u.b].ch);$("rCh").value=Math.min(u.c,BK[u.b].ch);u.c=+$("rCh").value;
+ $("rBook").innerHTML=optBooks();if(!BK[u.b])u.b=BOOKS[0].c;$("rBook").value=u.b;$("rCh").innerHTML=optNums(BK[u.b].ch);$("rCh").value=Math.min(u.c,BK[u.b].ch);u.c=+$("rCh").value;ddSync();
  const list=S.tr.filter(t=>!cen||t.century===cen);
  $("rTr").innerHTML=list.length?list.map(t=>`<button class="chip ${u.sel.includes(t.id)?"on":""}" data-id="${t.id}">${esc(t.name)}<small>${esc(t.translator||"")}${t.year?" · "+esc(t.year):""} · abad ${t.century}</small></button>`).join(""):`<span style="color:var(--mute)">Tiada terjemahan. Tambah di ruang Admin.</span>`;
  const sel=S.tr.filter(t=>u.sel.includes(t.id)),b=BK[u.b],R=$("reading");if(sel.length)try{await getVerses(sel.map(t=>t.id),u.b,u.c)}catch(e){return R.innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
@@ -191,7 +208,7 @@ async function renderAdmin(){
  if(S.tr.some(t=>t.id===keepT))$("aTr").value=keepT;
  let kb=$("aBook").value;if(!BK[kb])kb=BK[S.ui.b]?S.ui.b:BOOKS[0].c;$("aBook").innerHTML=optBooks();$("aBook").value=kb;
  $("tList").innerHTML=S.tr.map(t=>`<div class="item"><div><p>${esc(t.name)}</p><small>${esc(t.translator||"—")}${t.year?" · "+esc(t.year):""} · abad ${t.century} · ${t.cnt} ayat</small></div><div class="acts"><button class="btn sm" data-ed="${t.id}">Ubah</button><button class="btn sm del" data-del="${t.id}">Padam</button></div></div>`).join("")||`<small style="color:var(--mute)">Belum ada terjemahan.</small>`;
- renderList();renderBooks();
+ renderList();renderBooks();ddSync();
 }
 async function renderList(){
  const t=$("aTr").value,b=$("aBook").value,c=+$("aCh").value||1;if(t)try{await getVerses([t],b,c)}catch(e){}
@@ -259,6 +276,29 @@ $("login").onclick=doLogin;$("pw").onkeydown=e=>{if(e.key==="Enter")doLogin()};
 $("out").onclick=async()=>{await fetch("/api/login",{method:"DELETE"});S.admin=false;location.hash="#baca";route()};
 async function boot(){try{await refresh()}catch(e){document.querySelector("main").insertAdjacentHTML("afterbegin",'<div class="card empty">Pangkalan data belum disediakan. Log masuk di #admin, kemudian buka /api/setup</div>');S.books=DEF.map(b=>({...b}));S.groups=[...new Set(DEF.map(b=>b.g))];rebuild()}
  S.ui.sel=S.ui.sel.filter(id=>S.tr.some(t=>t.id===id));if(!BK[S.ui.b])S.ui.b=BOOKS[0].c;route()}
+/* custom dropdowns */
+const DDS=[];
+function closeDD(){document.querySelectorAll(".dd.open").forEach(d=>d.classList.remove("open"))}
+function ddSync(){DDS.forEach(f=>f())}
+function mkDD(id,kind){const sel=$(id),w=document.createElement("div");w.className="dd "+kind;sel.parentNode.insertBefore(w,sel);w.appendChild(sel);sel.style.display="none";
+ w.insertAdjacentHTML("beforeend",'<button type="button" class="ddb"><span></span><i></i></button><div class="ddp"></div>');
+ const b=w.querySelector(".ddb"),p=w.querySelector(".ddp");
+ const sync=()=>{const o=sel.options[sel.selectedIndex];b.firstChild.textContent=o?o.text:"—"};DDS.push(sync);
+ const item=o=>`<button type="button" class="do${o.value===sel.value?" on":""}" data-v="${esc(o.value)}">${esc(o.text)}</button>`;
+ function fill(){let h=kind==="book"?'<div class="dds"><input placeholder="Cari kitab…"></div>':"";
+  if(kind==="ch")h+='<div class="dl">'+[...sel.options].map(item).join("")+"</div>";
+  else for(const c of sel.children)h+=c.tagName==="OPTGROUP"?`<div class="dg">${esc(c.label)}</div>`+[...c.children].map(item).join(""):item(c);
+  p.innerHTML=h}
+ b.onclick=e=>{e.stopPropagation();const was=w.classList.contains("open");closeDD();if(was)return;fill();w.classList.add("open");
+  const on=p.querySelector(".do.on");if(on)p.scrollTop=Math.max(0,on.offsetTop-p.clientHeight/2+on.offsetHeight/2);
+  const s=p.querySelector("input");if(s&&matchMedia("(hover:hover)").matches)s.focus()};
+ p.oninput=e=>{if(e.target.tagName!=="INPUT")return;const q=e.target.value.toLowerCase();let g=null,n=0;
+  p.querySelectorAll(".dg,.do").forEach(el=>{if(el.classList.contains("dg")){if(g)g.style.display=n?"":"none";g=el;n=0}else{const ok=el.textContent.toLowerCase().includes(q);el.style.display=ok?"":"none";if(ok)n++}});if(g)g.style.display=n?"":"none"};
+ p.onclick=e=>{const o=e.target.closest(".do");if(!o)return;sel.value=o.dataset.v;sel.dispatchEvent(new Event("change"));sync();closeDD()};
+ sync()}
+document.addEventListener("click",e=>{if(!e.target.closest(".dd"))closeDD()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDD()});
+mkDD("rBook","book");mkDD("rCh","ch");mkDD("rCen","cen");mkDD("aBook","book");
 load();boot();
 </script>
 </body>
