@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ms" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alkitab Melayu</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f0e6;--panel:#fffdf8;--ink:#1c1912;--mute:#7b705e;--line:#e2d8c3;--gold:#946e1f;--goldbg:rgba(148,110,31,.1);--sh:0 18px 50px -28px rgba(70,45,0,.45);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme="dark"]{--bg:#0d0c0a;--panel:#16140f;--ink:#ece4d2;--mute:#8d8370;--line:#2a261c;--gold:#d4a94f;--goldbg:rgba(212,169,79,.1);--sh:0 18px 50px -28px #000}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0c0a;--panel:#16140f;--ink:#ece4d2;--mute:#8d8370;--line:#2a261c;--gold:#d4a94f;--goldbg:rgba(212,169,79,.1);--sh:0 18px 50px -28px #000}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 Inter,system-ui,sans-serif;min-height:100vh;background-image:radial-gradient(900px 400px at 50% -120px,var(--goldbg),transparent)}
+.serif{font-family:"Cormorant Garamond",Georgia,serif}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px clamp(16px,4vw,48px);background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.logo{font:600 26px "Cormorant Garamond",Georgia,serif;letter-spacing:.04em}.logo b{color:var(--gold);font-weight:600}
+nav{display:flex;gap:6px;align-items:center}
+nav a,.btn{cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink);padding:8px 16px;border-radius:99px;font:500 13px Inter,sans-serif;text-decoration:none;letter-spacing:.04em;transition:.2s}
+nav a:hover,.btn:hover{border-color:var(--gold);color:var(--gold)}
+nav a.on,.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--bg)}
+.btn.gold:hover{color:var(--bg);opacity:.88}.btn.sm{padding:5px 12px;font-size:12px}.btn.del{color:#c0392b;border-color:color-mix(in srgb,#c0392b 40%,var(--line))}.btn.del:hover{border-color:#c0392b;color:#fff;background:#c0392b}.btn.red{background:#c0392b;border-color:#c0392b;color:#fff}.btn.red:hover{color:#fff;opacity:.88}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);display:grid;place-items:center;z-index:20;padding:20px}.box{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px;max-width:420px;width:100%;box-shadow:var(--sh)}.box p{margin:0 0 20px;font:500 22px/1.3 "Cormorant Garamond",serif}
+main{max-width:1180px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(16px,4vw,48px) 80px}
+.hero{text-align:center;padding:24px 0 34px}
+.hero h1{font:500 clamp(38px,6vw,64px)/1.05 "Cormorant Garamond",Georgia,serif;margin:0;letter-spacing:.01em}
+.hero p{color:var(--mute);margin:10px 0 0;font-style:italic}
+.orn{width:70px;height:1px;background:var(--gold);margin:18px auto 0;position:relative}.orn:after{content:"";position:absolute;left:50%;top:-3px;width:7px;height:7px;background:var(--gold);transform:translateX(-50%) rotate(45deg)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--sh)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+select,input,textarea{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;outline:none;transition:.2s}
+select:focus,input:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--goldbg)}
+label{display:block;font:500 11px Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:0 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{cursor:pointer;border:1px solid var(--line);border-radius:12px;padding:8px 14px;font-size:13px;background:transparent;color:var(--ink);transition:.2s;text-align:left}
+.chip small{display:block;color:var(--mute);font-size:11px}.chip.on{border-color:var(--gold);background:var(--goldbg)}.chip.on small{color:var(--gold)}
+.reading{margin-top:26px}
+.title{font:500 clamp(30px,4vw,44px)/1.1 "Cormorant Garamond",Georgia,serif;text-align:center;margin:10px 0 24px}
+.vhead,.vrow{display:grid;grid-template-columns:2.4rem repeat(var(--n),minmax(0,1fr));gap:0 34px}
+.vhead{padding:0 0 10px;border-bottom:1px solid var(--line);margin-bottom:6px;font:500 11px Inter;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.vhead span small{display:block;color:var(--mute);letter-spacing:.04em;text-transform:none;font-size:11px}
+.vrow{padding:12px 0;border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent)}
+.vn{font:600 15px "Cormorant Garamond",serif;color:var(--gold);padding-top:4px}
+.vt{font:400 clamp(18px,2vw,21px)/1.7 "Cormorant Garamond",Georgia,serif}.vt.none{color:var(--mute);font-style:italic}.vt .lbl{display:none}
+.pager{display:flex;justify-content:space-between;margin-top:26px}
+.empty{text-align:center;color:var(--mute);padding:50px 10px;font:italic 20px "Cormorant Garamond",serif}
+.grid2{display:grid;grid-template-columns:1fr 1.5fr;gap:22px;margin-top:22px;align-items:start}
+.row{display:grid;gap:12px;margin-bottom:14px}.r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:2fr 1fr 1fr}
+.row>div>*{width:100%}
+textarea{min-height:150px;resize:vertical;font:400 20px/1.6 "Cormorant Garamond",Georgia,serif}
+h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
+.item{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.item p{margin:0;font:400 17px/1.5 "Cormorant Garamond",serif}.item small{color:var(--mute)}
+.acts{display:flex;gap:6px;flex-shrink:0}
+.tabs{display:flex;gap:8px;margin-bottom:6px}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:var(--gold);color:var(--bg);padding:10px 20px;border-radius:99px;font-weight:500;opacity:0;transition:.3s;pointer-events:none;z-index:9}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.hide{display:none!important}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}.vhead{display:none}.vrow{grid-template-columns:2rem minmax(0,1fr);gap:8px 12px}.vrow .vt{grid-column:2}.vt .lbl{display:block;font:500 10px Inter;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}.logo{font-size:21px}nav a{padding:7px 12px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Alkitab <b>Melayu</b></div>
+  <nav>
+    <a href="#baca" id="n-baca">Baca</a><a href="#admin" id="n-admin">Admin</a>
+    <a id="out" class="hide">Keluar</a><a id="theme" title="Tema" style="padding:8px 12px">◐</a>
+  </nav>
+</header>
+<main>
+<section id="v-baca">
+  <div class="hero"><h1>Kitab Suci dalam Bahasa Melayu</h1><p>Terjemahan dari abad ke-17 hingga ke-20, bersebelahan</p><div class="orn"></div></div>
+  <div class="card">
+    <div class="bar">
+      <div><label>Kitab</label><select id="rBook"></select></div>
+      <div><label>Pasal</label><select id="rCh"></select></div>
+      <div style="margin-left:auto"><label>Abad</label><select id="rCen"><option value="">Semua</option><option value="17">Abad ke-17</option><option value="18">Abad ke-18</option><option value="19">Abad ke-19</option><option value="20">Abad ke-20</option><option value="21">Abad ke-21</option></select></div>
+    </div>
+    <div class="chips" id="rTr"></div>
+  </div>
+  <div class="reading" id="reading"></div>
+</section>
+
+<section id="v-login" class="hide">
+  <div class="hero"><h1>Log Masuk Admin</h1><p>Hanya untuk penyelenggara</p><div class="orn"></div></div>
+  <div class="card" style="max-width:420px;margin:0 auto"><label>Kata laluan</label><input id="pw" type="password" autocomplete="current-password" style="width:100%"><div class="bar" style="margin-top:14px"><button class="btn gold" id="login">Log masuk</button></div></div>
+</section>
+<section id="v-admin" class="hide">
+  <div class="hero"><h1>Ruang Admin</h1><p>Masukkan ayat satu demi satu</p><div class="orn"></div></div>
+  <div class="grid2">
+    <div style="display:grid;gap:22px">
+      <div class="card">
+        <h3>Terjemahan</h3>
+        <div class="row"><div><label>Nama</label><input id="tName" placeholder="cth. Alkitab Leydekker"></div></div>
+        <div class="row r3"><div><label>Penterjemah</label><input id="tAuth"></div><div><label>Tahun (abad auto)</label><input id="tYear" type="number" placeholder="1733"></div><div><label>Abad</label><select id="tCen"><option value="17">Abad ke-17</option><option value="18">Abad ke-18</option><option value="19">Abad ke-19</option><option value="20">Abad ke-20</option><option value="21">Abad ke-21</option></select></div></div>
+        <div class="bar"><button class="btn gold" id="tAdd">Tambah terjemahan</button><button class="btn hide" id="tCancel">Batal</button></div>
+        <div id="tList" style="margin-top:14px"></div>
+      </div>
+      <div class="card">
+        <h3>Import data lama</h3>
+        <p style="color:var(--mute);margin:0 0 12px;font-size:13px">Pindahkan data daripada versi localStorage: pilih fail JSON yang dieksport.</p>
+        <div class="bar"><button class="btn sm" id="imp">Import JSON</button><input type="file" id="file" accept=".json" class="hide"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Tambah ayat</h3>
+      <div class="row"><div><label>Terjemahan</label><select id="aTr"></select></div></div>
+      <div class="row r3"><div><label>Kitab</label><select id="aBook"></select></div><div><label>Pasal</label><input id="aCh" type="number" min="1" value="1"></div><div><label>Ayat</label><input id="aV" type="number" min="1" value="1"></div></div>
+      <div class="row"><div><label>Teks ayat</label><textarea id="aText" placeholder="Taip ayat di sini…"></textarea></div></div>
+      <div class="bar"><button class="btn gold" id="aSave">Simpan &amp; seterusnya</button><span style="color:var(--mute);font-size:12px">Ctrl + Enter</span></div>
+      <h3 style="margin-top:28px" id="aHead">Ayat dalam pasal ini</h3>
+      <div id="aList"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:22px">
+    <h3>Kitab &amp; kategori</h3>
+    <div class="grid2" style="margin-top:0;grid-template-columns:1fr 1.4fr">
+      <div>
+        <div class="row"><div><label>Nama kitab</label><input id="bName" placeholder="cth. Kejadian"></div></div>
+        <div class="row r3"><div><label>Kod</label><input id="bCode" placeholder="GEN" maxlength="6"></div><div><label>Pasal</label><input id="bCh" type="number" min="1" value="1"></div><div><label>Kategori</label><select id="bGrp"></select></div></div>
+        <div class="bar"><button class="btn gold" id="bAdd">Tambah kitab</button><button class="btn hide" id="bCancel">Batal</button></div>
+        <div style="height:24px"></div>
+        <label>Kategori</label>
+        <div class="bar"><input id="gName" placeholder="cth. Apokrifa"><button class="btn" id="gAdd">Tambah</button></div>
+      </div>
+      <div id="bList"></div>
+    </div>
+  </div>
+</section>
+</main>
+<div id="toast"></div>
+
+<script>
+const OT="GEN|Kejadian|50,EXO|Keluaran|40,LEV|Imamat|27,NUM|Bilangan|36,DEU|Ulangan|34,JOS|Yosua|24,JDG|Hakim-hakim|21,RUT|Rut|4,1SA|1 Samuel|31,2SA|2 Samuel|24,1KI|1 Raja-raja|22,2KI|2 Raja-raja|25,1CH|1 Tawarikh|29,2CH|2 Tawarikh|36,EZR|Ezra|10,NEH|Nehemia|13,EST|Ester|10,JOB|Ayub|42,PSA|Mazmur|150,PRO|Amsal|31,ECC|Pengkhotbah|12,SNG|Kidung Agung|8,ISA|Yesaya|66,JER|Yeremia|52,LAM|Ratapan|5,EZK|Yehezkiel|48,DAN|Daniel|12,HOS|Hosea|14,JOL|Yoel|3,AMO|Amos|9,OBA|Obaja|1,JON|Yunus|4,MIC|Mikha|7,NAM|Nahum|3,HAB|Habakuk|3,ZEP|Zefanya|3,HAG|Hagai|2,ZEC|Zakharia|14,MAL|Maleakhi|4";
+const NT="MAT|Matius|28,MRK|Markus|16,LUK|Lukas|24,JHN|Yohanes|21,ACT|Kisah Para Rasul|28,ROM|Roma|16,1CO|1 Korintus|16,2CO|2 Korintus|13,GAL|Galatia|6,EPH|Efesus|6,PHP|Filipi|4,COL|Kolose|4,1TH|1 Tesalonika|5,2TH|2 Tesalonika|3,1TI|1 Timotius|6,2TI|2 Timotius|4,TIT|Titus|3,PHM|Filemon|1,HEB|Ibrani|13,JAS|Yakobus|5,1PE|1 Petrus|5,2PE|2 Petrus|3,1JN|1 Yohanes|5,2JN|2 Yohanes|1,3JN|3 Yohanes|1,JUD|Yudas|1,REV|Wahyu|22";
+const DC="TOB|Tobit|14,JDT|Yudit|16,WIS|Kebijaksanaan Salomo|19,SIR|Putra Sirakh|51,BAR|Barukh|6,1MA|1 Makabe|16,2MA|2 Makabe|15";
+const parse=s=>s.split(",").map(x=>{const[a,b,c]=x.split("|");return{c:a,n:b,ch:+c}});
+const DEF=[["Perjanjian Lama",parse(OT)],["Perjanjian Baru",parse(NT)],["Deuterokanonika",parse(DC)]].flatMap(g=>g[1].map(b=>({...b,g:g[0]})));
+let BOOKS=[],BK={},GROUPS=[];
+function rebuild(){BOOKS=S.books;BK=Object.fromEntries(BOOKS.map(b=>[b.c,b]));GROUPS=S.groups.map(g=>[g,BOOKS.filter(b=>b.g===g)])}
+function initBooks(d){if(!d.books){d.books=DEF.map(b=>({...b}));d.groups=["Perjanjian Lama","Perjanjian Baru","Deuterokanonika"]}d.tr.forEach(t=>{if(t.century==="17-18")t.century="17"})}
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const KEY="am-ui";let mem=null;
+function lget(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lset(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+let S;
+function load(){let u=null;try{u=JSON.parse(lget(KEY))}catch(e){}S={tr:[],v:{},books:[],groups:[],admin:false,ui:u&&u.b?u:{b:"GEN",c:1,sel:[]}}}
+const save=()=>lset(KEY,JSON.stringify(S.ui));
+function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),1800)}
+const vk=(t,b,c,v)=>`${t}|${b}|${c}|${v}`;
+const optBooks=()=>GROUPS.map(g=>`<optgroup label="${g[0]}">${g[1].map(b=>`<option value="${b.c}">${b.n}</option>`).join("")}</optgroup>`).join("");
+const optNums=n=>Array.from({length:n},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
+
+/* theme */
+function setTheme(t){document.documentElement.setAttribute("data-theme",t);lset("am-theme",t)}
+(function(){document.documentElement.setAttribute("data-theme",lget("am-theme")||"dark")})();
+$("theme").onclick=()=>{const cur=document.documentElement.getAttribute("data-theme");setTheme(cur==="dark"?"light":"dark")};
+
+/* routing */
+function route(){const a=location.hash==="#admin",lg=a&&!S.admin;$("v-baca").classList.toggle("hide",a);$("v-login").classList.toggle("hide",!lg);$("v-admin").classList.toggle("hide",!a||lg);$("n-baca").classList.toggle("on",!a);$("n-admin").classList.toggle("on",a);$("out").classList.toggle("hide",!S.admin);if(a){if(!lg)renderAdmin()}else renderReader();scrollTo(0,0)}
+addEventListener("hashchange",route);
+
+/* reader */
+async function renderReader(){
+ const u=S.ui,cen=$("rCen").value;
+ $("rBook").innerHTML=optBooks();if(!BK[u.b])u.b=BOOKS[0].c;$("rBook").value=u.b;$("rCh").innerHTML=optNums(BK[u.b].ch);$("rCh").value=Math.min(u.c,BK[u.b].ch);u.c=+$("rCh").value;
+ const list=S.tr.filter(t=>!cen||t.century===cen);
+ $("rTr").innerHTML=list.length?list.map(t=>`<button class="chip ${u.sel.includes(t.id)?"on":""}" data-id="${t.id}">${esc(t.name)}<small>${esc(t.translator||"")}${t.year?" · "+esc(t.year):""} · abad ${t.century}</small></button>`).join(""):`<span style="color:var(--mute)">Tiada terjemahan. Tambah di ruang Admin.</span>`;
+ const sel=S.tr.filter(t=>u.sel.includes(t.id)),b=BK[u.b],R=$("reading");if(sel.length)try{await getVerses(sel.map(t=>t.id),u.b,u.c)}catch(e){return R.innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
+ if(!sel.length){R.innerHTML=`<div class="empty">Pilih satu atau lebih terjemahan untuk mula membaca.</div>`;return}
+ const nums=new Set();sel.forEach(t=>{for(const k in S.v){const p=k.split("|");if(p[0]===t.id&&p[1]===u.b&&+p[2]===u.c)nums.add(+p[3])}});
+ const vs=[...nums].sort((a,b)=>a-b);
+ let h=`<div class="title">${b.n} ${u.c}</div>`;
+ if(!vs.length)h+=`<div class="empty">Belum ada ayat untuk pasal ini.</div>`;
+ else{h+=`<div style="--n:${sel.length}"><div class="vhead" style="--n:${sel.length}"><span></span>${sel.map(t=>`<span>${esc(t.name)}<small>${esc(t.translator||"")}</small></span>`).join("")}</div>`;
+  h+=vs.map(v=>`<div class="vrow" style="--n:${sel.length}"><div class="vn">${v}</div>${sel.map(t=>{const x=S.v[vk(t.id,u.b,u.c,v)];return `<div class="vt ${x?"":"none"}"><span class="lbl">${esc(t.name)}</span>${x?esc(x):"—"}</div>`}).join("")}</div>`).join("")+`</div>`}
+ h+=`<div class="pager"><button class="btn" id="prev">← Sebelum</button><button class="btn" id="next">Seterusnya →</button></div>`;
+ R.innerHTML=h;$("prev").onclick=()=>step(-1);$("next").onclick=()=>step(1);
+}
+function step(d){const u=S.ui,i=BOOKS.findIndex(b=>b.c===u.b);let c=u.c+d,bi=i;
+ if(c<1){bi=Math.max(0,i-1);c=bi===i?1:BOOKS[bi].ch}else if(c>BOOKS[i].ch){bi=Math.min(BOOKS.length-1,i+1);c=bi===i?BOOKS[i].ch:1}
+ u.b=BOOKS[bi].c;u.c=c;save();renderReader();scrollTo(0,0)}
+$("rBook").onchange=e=>{S.ui.b=e.target.value;S.ui.c=1;save();renderReader()};
+$("rCh").onchange=e=>{S.ui.c=+e.target.value;save();renderReader()};
+$("rCen").onchange=renderReader;
+$("rTr").onclick=e=>{const c=e.target.closest(".chip");if(!c)return;const id=c.dataset.id,s=S.ui.sel,i=s.indexOf(id);i>=0?s.splice(i,1):s.length<4?s.push(id):toast("Maksimum 4 terjemahan");save();renderReader()};
+
+/* admin */
+async function renderAdmin(){
+ const keepT=$("aTr").value;try{await refresh()}catch(e){}
+ $("aTr").innerHTML=S.tr.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("")||`<option value="">— tambah terjemahan dahulu —</option>`;
+ if(S.tr.some(t=>t.id===keepT))$("aTr").value=keepT;
+ let kb=$("aBook").value;if(!BK[kb])kb=BK[S.ui.b]?S.ui.b:BOOKS[0].c;$("aBook").innerHTML=optBooks();$("aBook").value=kb;
+ $("tList").innerHTML=S.tr.map(t=>`<div class="item"><div><p>${esc(t.name)}</p><small>${esc(t.translator||"—")}${t.year?" · "+esc(t.year):""} · abad ${t.century} · ${t.cnt} ayat</small></div><div class="acts"><button class="btn sm" data-ed="${t.id}">Ubah</button><button class="btn sm del" data-del="${t.id}">Padam</button></div></div>`).join("")||`<small style="color:var(--mute)">Belum ada terjemahan.</small>`;
+ renderList();renderBooks();
+}
+async function renderList(){
+ const t=$("aTr").value,b=$("aBook").value,c=+$("aCh").value||1;if(t)try{await getVerses([t],b,c)}catch(e){}
+ $("aHead").textContent=`Ayat dalam ${BK[b].n} ${c}`;
+ const rows=Object.keys(S.v).map(k=>k.split("|")).filter(p=>p[0]===t&&p[1]===b&&+p[2]===c).map(p=>+p[3]).sort((x,y)=>x-y);
+ $("aList").innerHTML=rows.map(v=>`<div class="item"><div><small>Ayat ${v}</small><p>${esc(S.v[vk(t,b,c,v)])}</p></div><div class="acts"><button class="btn sm" data-edit="${v}">Ubah</button><button class="btn sm del" data-rm="${v}">Padam</button></div></div>`).join("")||`<small style="color:var(--mute)">Belum ada ayat.</small>`;
+}
+function fillText(){const x=S.v[vk($("aTr").value,$("aBook").value,+$("aCh").value,+$("aV").value)];$("aText").value=x||""}
+["aTr","aBook","aCh"].forEach(id=>$(id).addEventListener("change",()=>{S.ui.b=$("aBook").value;renderList().then(fillText)}));
+$("aV").addEventListener("input",fillText);
+$("aBook").addEventListener("change",()=>{const m=BK[$("aBook").value].ch;$("aCh").max=m;if(+$("aCh").value>m)$("aCh").value=m;renderList()});
+async function saveVerse(){
+ const t=$("aTr").value,b=$("aBook").value,c=+$("aCh").value,v=+$("aV").value,x=$("aText").value.trim();
+ if(!t)return toast("Tambah terjemahan dahulu");if(!c||!v)return toast("Isi pasal dan ayat");if(!x)return toast("Teks ayat kosong");
+ try{await op({op:"verse",tid:t,book:b,ch:c,v,text:x})}catch(e){return toast(e.message)}S.v[vk(t,b,c,v)]=x;S.ui.b=b;S.ui.c=c;if(!S.ui.sel.includes(t)&&S.ui.sel.length<4)S.ui.sel.push(t);save();
+ $("aV").value=v+1;$("aText").value=S.v[vk(t,b,c,v+1)]||"";renderAdmin();$("aText").focus();toast(`Disimpan — ${BK[b].n} ${c}:${v}`)}
+$("aSave").onclick=saveVerse;
+$("aText").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();saveVerse()}});
+$("aList").onclick=async e=>{const t=$("aTr").value,b=$("aBook").value,c=+$("aCh").value;
+ if(e.target.dataset.edit){$("aV").value=e.target.dataset.edit;fillText();$("aText").focus();scrollTo({top:0,behavior:"smooth"})}
+ if(e.target.dataset.rm&&await ask("Padam ayat "+e.target.dataset.rm+"?")){try{await op({op:"delVerse",tid:t,book:b,ch:c,v:+e.target.dataset.rm});renderAdmin()}catch(x){toast(x.message)}}};
+$("tAdd").onclick=async()=>{const n=$("tName").value.trim();if(!n)return toast("Nama diperlukan");
+ const y=$("tYear").value.trim(),c=cenOf(y),d={name:n,translator:$("tAuth").value.trim(),year:y,century:(c>=17&&c<=21)?String(c):$("tCen").value},was=tEdit;
+ try{await op({op:"tr",id:was||"t"+Date.now().toString(36),...d})}catch(e){return toast(e.message)}
+ resetT();renderAdmin();toast(was?"Terjemahan dikemas kini":"Terjemahan ditambah")};
+$("tList").onclick=async e=>{const d=e.target.dataset;
+ if(d.ed){const t=S.tr.find(x=>x.id===d.ed);tEdit=t.id;$("tName").value=t.name;$("tAuth").value=t.translator||"";$("tYear").value=t.year||"";$("tCen").value=t.century;$("tAdd").textContent="Simpan perubahan";$("tCancel").classList.remove("hide");$("tName").focus()}
+ if(d.del){const id=d.del,t=S.tr.find(x=>x.id===id);if(await ask(`Padam terjemahan ini dan ${t.cnt} ayatnya?`)){try{await op({op:"delTr",id})}catch(x){return toast(x.message)}S.ui.sel=S.ui.sel.filter(x=>x!==id);if(tEdit===id)resetT();save();renderAdmin()}}};
+$("imp").onclick=()=>$("file").click();
+$("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{const d=JSON.parse(r.result);if(!d.tr||!d.v)throw Error("Fail tidak sah");
+ toast("Mengimport…");
+ await op({op:"importMeta",groups:d.groups||[],books:d.books||[],translations:d.tr});
+ const ks=Object.keys(d.v);for(let i=0;i<ks.length;i+=400){await op({op:"importVerses",rows:ks.slice(i,i+400).map(k=>{const p=k.split("|");return[p[0],p[1],+p[2],+p[3],d.v[k]]})});toast(`Import ${Math.min(i+400,ks.length)}/${ks.length}`)}
+ renderAdmin();toast("Import berjaya")}catch(x){toast(x.message||"Gagal import")}};r.readAsText(f);e.target.value=""};
+let tEdit=null,bEdit=null,gEdit=null;
+const cenOf=y=>{y=parseInt(y);return y>0?Math.ceil(y/100):0};
+function ask(msg,label="Padam"){return new Promise(r=>{const m=document.createElement("div");m.className="modal";m.innerHTML=`<div class="box"><p>${esc(msg)}</p><div class="bar" style="justify-content:flex-end"><button class="btn" data-v="0">Batal</button><button class="btn red" data-v="1">${esc(label)}</button></div></div>`;m.onclick=e=>{const v=e.target.dataset.v;if(v!==undefined||e.target===m){m.remove();r(v==="1")}};document.body.appendChild(m);m.querySelector("[data-v='0']").focus()})}
+function resetT(){tEdit=null;["tName","tAuth","tYear"].forEach(i=>$(i).value="");$("tAdd").textContent="Tambah terjemahan";$("tCancel").classList.add("hide")}
+function resetB(){bEdit=null;["bName","bCode"].forEach(i=>$(i).value="");$("bCh").value=1;$("bAdd").textContent="Tambah kitab";$("bCancel").classList.add("hide")}
+$("tYear").oninput=()=>{const c=cenOf($("tYear").value);if(c>=17&&c<=21)$("tCen").value=String(c)};
+$("tCancel").onclick=resetT;$("bCancel").onclick=resetB;
+function renderBooks(){const kg=$("bGrp").value;$("bGrp").innerHTML=S.groups.map(g=>`<option>${esc(g)}</option>`).join("");if(S.groups.includes(kg))$("bGrp").value=kg;
+ $("bList").innerHTML=GROUPS.map(([g,bs])=>`<div class="item" style="border-bottom-color:var(--gold)"><div><p style="font-size:22px;color:var(--gold)">${esc(g)}</p><small>${bs.length} kitab</small></div><div class="acts"><button class="btn sm" data-gen="${esc(g)}">Ubah</button><button class="btn sm del" data-gdel="${esc(g)}">Padam</button></div></div>`+bs.map(b=>`<div class="item"><div><p>${esc(b.n)}</p><small>${esc(b.c)} · ${b.ch} pasal</small></div><div class="acts"><button class="btn sm" data-up="${esc(b.c)}">↑</button><button class="btn sm" data-dn="${esc(b.c)}">↓</button><button class="btn sm" data-bed="${esc(b.c)}">Ubah</button><button class="btn sm del" data-bdel="${esc(b.c)}">Padam</button></div></div>`).join("")).join("")}
+$("bAdd").onclick=async()=>{const n=$("bName").value.trim(),c=$("bCode").value.trim().toUpperCase().replace(/[|\s]/g,""),ch=Math.max(1,+$("bCh").value||1),g=$("bGrp").value;
+ if(!n||!c||!g)return toast("Nama, kod dan kategori diperlukan");
+ const was=bEdit;try{await op({op:"book",old:was,c,n,ch,g})}catch(e){return toast(e.message)}
+ if(was&&S.ui.b===was)S.ui.b=c;resetB();save();renderAdmin();toast(was?"Kitab dikemas kini":"Kitab ditambah")};
+$("gAdd").onclick=async()=>{const g=$("gName").value.trim();if(!g)return toast("Nama kategori diperlukan");
+ try{await op({op:"group",old:gEdit,name:g})}catch(e){return toast(e.message)}
+ gEdit=null;$("gName").value="";$("gAdd").textContent="Tambah";renderAdmin()};
+$("bList").onclick=async e=>{const d=e.target.dataset;
+ if(d.bed){const b=BK[d.bed];bEdit=b.c;$("bName").value=b.n;$("bCode").value=b.c;$("bCh").value=b.ch;$("bGrp").value=b.g;$("bAdd").textContent="Simpan perubahan";$("bCancel").classList.remove("hide");$("bName").focus()}
+ if(d.bdel){if(BOOKS.length<2)return toast("Mesti ada sekurang-kurangnya satu kitab");const id=d.bdel,b=BK[id];if(await ask(`Padam ${b.n} dan ${b.cnt} ayat di dalamnya?`)){try{await op({op:"delBook",c:id})}catch(x){return toast(x.message)}if(bEdit===id)resetB();renderAdmin()}}
+ if(d.up||d.dn){try{await op({op:"move",c:d.up||d.dn,dir:d.up?-1:1})}catch(x){return toast(x.message)}renderAdmin()}
+ if(d.gen){gEdit=d.gen;$("gName").value=d.gen;$("gAdd").textContent="Simpan";$("gName").focus()}
+ if(d.gdel){const g=d.gdel;if(S.books.some(b=>b.g===g))return toast("Pindahkan atau padam kitab dalam kategori ini dahulu");if(await ask(`Padam kategori "${g}"?`)){try{await op({op:"delGroup",name:g})}catch(x){return toast(x.message)}renderAdmin()}}};
+
+/* server API */
+async function api(u,o){const r=await fetch(u,o&&{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Ralat "+r.status);return d}
+const op=o=>api("/api/admin",o);
+async function refresh(){const m=await api("/api/meta");S.tr=m.translations;S.books=m.books;S.groups=m.groups;S.admin=m.admin;rebuild()}
+async function getVerses(ids,b,c){const rows=await api(`/api/verses?book=${encodeURIComponent(b)}&ch=${c}&t=${ids.join(",")}`);for(const k of Object.keys(S.v)){const p=k.split("|");if(p[1]===b&&+p[2]===c&&ids.includes(p[0]))delete S.v[k]}rows.forEach(r=>S.v[vk(r.tid,b,c,r.v)]=r.text)}
+async function doLogin(){try{await api("/api/login",{password:$("pw").value});$("pw").value="";S.admin=true;try{await refresh()}catch(e){}route()}catch(e){toast(e.message)}}
+$("login").onclick=doLogin;$("pw").onkeydown=e=>{if(e.key==="Enter")doLogin()};
+$("out").onclick=async()=>{await fetch("/api/login",{method:"DELETE"});S.admin=false;location.hash="#baca";route()};
+async function boot(){try{await refresh()}catch(e){document.querySelector("main").insertAdjacentHTML("afterbegin",'<div class="card empty">Pangkalan data belum disediakan. Log masuk di #admin, kemudian buka /api/setup</div>');S.books=DEF.map(b=>({...b}));S.groups=[...new Set(DEF.map(b=>b.g))];rebuild()}
+ S.ui.sel=S.ui.sel.filter(id=>S.tr.some(t=>t.id===id));if(!BK[S.ui.b])S.ui.b=BOOKS[0].c;route()}
+load();boot();
+</script>
+</body>
+</html>
