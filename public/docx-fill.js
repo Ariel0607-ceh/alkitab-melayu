@@ -46,8 +46,11 @@
   }
 
   // rows: [{ch, v, text}] -> chapter drop-cap + verse paragraphs.
-  // Paragraphs: a verse starting with "¶" always starts one. If a chapter has no ¶ marks, a new paragraph starts
-  // after paraMin..paraMax verses (at the first verse after a sentence end, forced at paraMax).
+  // A verse starting with "¶" always starts a paragraph. If a chapter has no ¶ marks, paragraphs hold paraMin..paraMax verses
+  // (a new one starts at the first verse after a sentence end once paraMin is reached, forced at paraMax), and a lone
+  // verse is never left on its own: it joins the previous paragraph.
+  // Paragraphs have no gap between them; only the end of a chapter gets one blank line (never on the drop-cap paragraph itself).
+  const SPACER = '<w:p><w:pPr><w:pStyle w:val="Verse"/><w:ind w:firstLine="0"/></w:pPr></w:p>';
   function chapters(rows, opt) {
     const by = new Map();
     for (const r of rows) {
@@ -59,17 +62,26 @@
     for (const ch of [...by.keys()].sort((a, b) => a - b)) {
       const vs = by.get(ch).sort((a, b) => a.v - b.v);
       const manual = vs.some((r) => String(r.text).trim()[0] === "¶");
-      out += DROP(ch);
-      let style = "VerseFirst", runs = "", first = true, n = 0, prev = "";
+      const groups = [[]];
+      let prev = "";
       for (const r of vs) {
         let txt = String(r.text).replace(/\s+/g, " ").trim(), brk = false;
+        const cur = groups[groups.length - 1];
         if (txt[0] === "¶") { brk = true; txt = txt.slice(1).trim(); }
-        else if (!manual && opt.max && n >= opt.min && (n >= opt.max || /[.!?]["”’»)]*$/.test(prev))) brk = true;
-        if (brk && !first) { out += P(style, runs, opt.gap); style = "Verse"; runs = ""; n = 0; }
-        runs += (first && +r.v === 1 ? "" : NUM(r.v)) + TH(txt + " ", opt.hyph);
-        first = false; n++; prev = txt;
+        else if (!manual && opt.max && cur.length >= opt.min && (cur.length >= opt.max || /[.!?]["”’»)]*$/.test(prev))) brk = true;
+        if (brk && cur.length) groups.push([]);
+        groups[groups.length - 1].push({ v: r.v, txt });
+        prev = txt;
       }
-      out += P(style, runs, opt.gap);
+      if (!manual && groups.length > 1 && groups[groups.length - 1].length === 1) groups[groups.length - 2].push(groups.pop()[0]);
+      out += DROP(ch);
+      groups.forEach((g, gi) => {
+        const style = gi === 0 ? "VerseFirst" : "Verse", last = gi === groups.length - 1;
+        let runs = "";
+        g.forEach((x, k) => { runs += (gi === 0 && k === 0 && +x.v === 1 ? "" : NUM(x.v)) + TH(x.txt + " ", opt.hyph); });
+        out += P(style, runs, last && style === "Verse" ? opt.gap : 0);
+        if (last && style === "VerseFirst" && opt.gap) out += SPACER;
+      });
     }
     return out;
   }
@@ -82,8 +94,8 @@
     if (heads.length !== CODES.length) throw new Error("Templat tidak dijangka (" + heads.length + " kitab, perlu 66)");
 
     const line = o.bodySize ? Math.round(Math.round(o.bodySize * 2) * 11.667) : 210;          // template: 9 pt, exact 10.5 pt leading
-    const popt = { min: o.paraMin == null ? 5 : o.paraMin, max: o.paraMax == null ? 7 : o.paraMax,
-                   gap: Math.round(line * (o.paraGapLines == null ? 1 : o.paraGapLines)),
+    const popt = { min: o.paraMin == null ? 4 : o.paraMin, max: o.paraMax == null ? 5 : o.paraMax,
+                   gap: Math.round(line * (o.chapterGapLines == null ? 1 : o.chapterGapLines)),
                    hyph: o.hyphenate !== false };                                             // Malay hyphenation on by default   // one blank line after each paragraph
 
     // book bodies, last to first so earlier offsets stay valid
@@ -140,8 +152,8 @@
         const sz = Math.round(o.bodySize * 2);
         st = st.replace(/(<w:rPrDefault>[\s\S]*?<w:sz w:val=")\d+("\/><w:szCs w:val=")\d+/, "$1" + sz + "$2" + sz)
                .replace(/(<w:pPrDefault>[\s\S]*?w:line=")\d+/, "$1" + line)
-               .replace(/(w:styleId="ChapterNumber"[\s\S]*?w:line=")\d+/, "$1" + line * 3);
       }
+      st = st.replace(/(w:styleId="ChapterNumber"[\s\S]*?w:line=")\d+/, "$1" + (line * 3 - 20));   // drop cap: just under 3 body lines
       if (o.hyphenLang) st = st.replace(/(<w:rPrDefault>[\s\S]*?<w:szCs w:val="\d+"\/>)(<\/w:rPr>)/, "$1<w:lang w:val=\"" + q(o.hyphenLang) + "\"/>$2");
       zip.file("word/styles.xml", st);
     }
