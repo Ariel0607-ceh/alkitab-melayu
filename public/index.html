@@ -144,12 +144,20 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
       <div id="bList"></div>
     </div>
   </div>
+  <div class="card" style="margin-top:22px">
+    <h3>Eksport Word (susun atur cetakan)</h3>
+    <p style="color:var(--mute);margin:0 0 14px;font-size:13px">Pilih terjemahan dan tekan butang. Ayat dan nama kitab dimasukkan ke dalam templat Word anda; gaya, lajur dan reka letak tidak diubah. Mulakan ayat dengan <b>¶</b> untuk perenggan baharu.</p>
+    <div class="row r2"><div><label>Terjemahan</label><select id="xTr"></select></div><div><label>Tajuk (muka depan)</label><input id="xTitle"></div></div>
+    <div class="row r2"><div><label>Baris kedua (penterjemah · tahun)</label><input id="xLine"></div><div><label>Nota hak cipta / penerbit</label><input id="xNotes"></div></div>
+    <div class="bar"><button class="btn gold" id="xGo">Jana &amp; muat turun .docx</button><span id="xSt" style="color:var(--mute);font-size:13px"></span></div>
+  </div>
 </section>
 </main>
 <div id="toast"></div>
 
-<script>
-const OT="GEN|Kejadian|50,EXO|Keluaran|40,LEV|Imamat|27,NUM|Bilangan|36,DEU|Ulangan|34,JOS|Yosua|24,JDG|Hakim-hakim|21,RUT|Rut|4,1SA|1 Samuel|31,2SA|2 Samuel|24,1KI|1 Raja-raja|22,2KI|2 Raja-raja|25,1CH|1 Tawarikh|29,2CH|2 Tawarikh|36,EZR|Ezra|10,NEH|Nehemia|13,EST|Ester|10,JOB|Ayub|42,PSA|Mazmur|150,PRO|Amsal|31,ECC|Pengkhotbah|12,SNG|Kidung Agung|8,ISA|Yesaya|66,JER|Yeremia|52,LAM|Ratapan|5,EZK|Yehezkiel|48,DAN|Daniel|12,HOS|Hosea|14,JOL|Yoel|3,AMO|Amos|9,OBA|Obaja|1,JON|Yunus|4,MIC|Mikha|7,NAM|Nahum|3,HAB|Habakuk|3,ZEP|Zefanya|3,HAG|Hagai|2,ZEC|Zakharia|14,MAL|Maleakhi|4";
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="/docx-fill.js"></script>
+<script>const OT="GEN|Kejadian|50,EXO|Keluaran|40,LEV|Imamat|27,NUM|Bilangan|36,DEU|Ulangan|34,JOS|Yosua|24,JDG|Hakim-hakim|21,RUT|Rut|4,1SA|1 Samuel|31,2SA|2 Samuel|24,1KI|1 Raja-raja|22,2KI|2 Raja-raja|25,1CH|1 Tawarikh|29,2CH|2 Tawarikh|36,EZR|Ezra|10,NEH|Nehemia|13,EST|Ester|10,JOB|Ayub|42,PSA|Mazmur|150,PRO|Amsal|31,ECC|Pengkhotbah|12,SNG|Kidung Agung|8,ISA|Yesaya|66,JER|Yeremia|52,LAM|Ratapan|5,EZK|Yehezkiel|48,DAN|Daniel|12,HOS|Hosea|14,JOL|Yoel|3,AMO|Amos|9,OBA|Obaja|1,JON|Yunus|4,MIC|Mikha|7,NAM|Nahum|3,HAB|Habakuk|3,ZEP|Zefanya|3,HAG|Hagai|2,ZEC|Zakharia|14,MAL|Maleakhi|4";
 const NT="MAT|Matius|28,MRK|Markus|16,LUK|Lukas|24,JHN|Yohanes|21,ACT|Kisah Para Rasul|28,ROM|Roma|16,1CO|1 Korintus|16,2CO|2 Korintus|13,GAL|Galatia|6,EPH|Efesus|6,PHP|Filipi|4,COL|Kolose|4,1TH|1 Tesalonika|5,2TH|2 Tesalonika|3,1TI|1 Timotius|6,2TI|2 Timotius|4,TIT|Titus|3,PHM|Filemon|1,HEB|Ibrani|13,JAS|Yakobus|5,1PE|1 Petrus|5,2PE|2 Petrus|3,1JN|1 Yohanes|5,2JN|2 Yohanes|1,3JN|3 Yohanes|1,JUD|Yudas|1,REV|Wahyu|22";
 const DC="TOB|Tobit|14,JDT|Yudit|16,WIS|Kebijaksanaan Salomo|19,SIR|Putra Sirakh|51,BAR|Barukh|6,1MA|1 Makabe|16,2MA|2 Makabe|15";
 const parse=s=>s.split(",").map(x=>{const[a,b,c]=x.split("|");return{c:a,n:b,ch:+c}});
@@ -210,7 +218,7 @@ async function renderAdmin(){
  if(S.tr.some(t=>t.id===keepT))$("aTr").value=keepT;
  let kb=$("aBook").value;if(!BK[kb])kb=BK[S.ui.b]?S.ui.b:BOOKS[0].c;$("aBook").innerHTML=optBooks();$("aBook").value=kb;
  $("tList").innerHTML=S.tr.map(t=>`<div class="item"><div><p>${esc(t.name)}</p><small>${esc(t.translator||"—")}${t.year?" · "+esc(t.year):""} · abad ${t.century} · ${t.cnt} ayat</small></div><div class="acts"><button class="btn sm" data-ed="${t.id}">Ubah</button><button class="btn sm del" data-del="${t.id}">Padam</button></div></div>`).join("")||`<small style="color:var(--mute)">Belum ada terjemahan.</small>`;
- renderList();renderBooks();ddSync();fillBN();
+ renderList();renderBooks();ddSync();fillBN();fillX();
 }
 async function renderList(){
  const t=$("aTr").value,b=$("aBook").value,c=+$("aCh").value||1;if(t)try{await getVerses([t],b,c)}catch(e){}
@@ -282,6 +290,24 @@ const bn=b=>b.en||b.n;
 const bkName=(tid,c)=>S.names[tid+"|"+c]||(BK[c]?BK[c].n:c);
 function fillBN(){const t=$("aTr").value,b=$("aBook").value;$("aBN").value=S.names[t+"|"+b]||"";$("aBN").placeholder=BK[b]?"Lalai: "+BK[b].n:""}
 $("aBN").onchange=async()=>{const t=$("aTr").value,b=$("aBook").value;if(!t)return;const name=$("aBN").value.trim();try{await op({op:"bookName",tid:t,book:b,name})}catch(e){return toast(e.message)}if(name)S.names[t+"|"+b]=name;else delete S.names[t+"|"+b];toast("Nama kitab disimpan")};
+/* word export */
+function fillX(){const el=$("xTr"),keep=el.value;el.innerHTML=S.tr.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("");if(S.tr.some(t=>t.id===keep))el.value=keep;else xDefaults()}
+function xDefaults(){const t=S.tr.find(x=>x.id===$("xTr").value);if(!t)return;$("xTitle").value=t.name;$("xLine").value=[t.translator,t.year].filter(Boolean).join(" · ")}
+$("xTr").onchange=xDefaults;
+$("xGo").onclick=async()=>{const tid=$("xTr").value,st=$("xSt"),btn=$("xGo");if(!tid)return toast("Pilih terjemahan");
+ btn.disabled=true;
+ try{const codes=FILL_CODES.slice(),verses={};let done=0;
+  const work=async()=>{while(codes.length){const c=codes.shift();verses[c]=await api(`/api/export?tid=${encodeURIComponent(tid)}&book=${c}`);st.textContent=`Mengambil ayat… ${++done}/66`}};
+  await Promise.all([work(),work(),work(),work(),work()]);
+  st.textContent="Menyusun dokumen…";
+  const buf=await (await fetch("/Bible_Layout_Template.docx")).arrayBuffer();
+  const names={};FILL_CODES.forEach(c=>names[c]=bkName(tid,c));
+  const blob=await fillBibleDocx(JSZip,buf,{title:$("xTitle").value,line2:$("xLine").value,notes:$("xNotes").value,otTitle:BK.GEN?BK.GEN.g:"",ntTitle:BK.MAT?BK.MAT.g:"",names,verses});
+  const t=S.tr.find(x=>x.id===tid),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="Alkitab - "+(t?t.name:"terjemahan")+".docx";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  const empty=FILL_CODES.filter(c=>!verses[c].length).length;
+  st.textContent=`Siap. ${66-empty} kitab ada ayat`+(empty?`, ${empty} kitab guna teks contoh templat.`:".")}
+ catch(e){st.textContent="Gagal: "+e.message}
+ btn.disabled=false};
 /* custom dropdowns */
 const DDS=[];
 function closeDD(){document.querySelectorAll(".dd.open").forEach(d=>d.classList.remove("open"))}
