@@ -4,7 +4,8 @@
   const CODES = "GEN EXO LEV NUM DEU JOS JDG RUT 1SA 2SA 1KI 2KI 1CH 2CH EZR NEH EST JOB PSA PRO ECC SNG ISA JER LAM EZK DAN HOS JOL AMO OBA JON MIC NAM HAB ZEP HAG ZEC MAL MAT MRK LUK JHN ACT ROM 1CO 2CO GAL EPH PHP COL 1TH 2TH 1TI 2TI TIT PHM HEB JAS 1PE 2PE 1JN 2JN 3JN JUD REV".split(" ");
   const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const T = (t) => `<w:r><w:t xml:space="preserve">${esc(t)}</w:t></w:r>`;
-  const NUM = (n) => `<w:r><w:rPr><w:rStyle w:val="VerseNum"/></w:rPr><w:t xml:space="preserve">${n}</w:t></w:r>` + T(" ");
+  // the NBSP lives inside the small number run, so a line can never end on a number with its verse on the next line
+  const NUM = (n) => `<w:r><w:rPr><w:rStyle w:val="VerseNum"/></w:rPr><w:t xml:space="preserve">${n}\u00A0</w:t></w:r>`;
   const P = (style, runs) => `<w:p><w:pPr><w:pStyle w:val="${style}"/></w:pPr>${runs}</w:p>`;
   const DROP = (n) => `<w:p><w:pPr><w:pStyle w:val="ChapterNumber"/><w:framePr w:dropCap="drop" w:lines="3" w:wrap="around" w:vAnchor="text" w:hAnchor="text"/></w:pPr>${T(n)}</w:p>`;
   const setText = (xml, from, to) => xml.split(`>${from}<`).join(`>${esc(to)}<`);
@@ -71,6 +72,31 @@
     if (o.notes) d = setText(d, "Copyright, publisher, ISBN and edition notes go here.", o.notes);
     if (o.otTitle) d = setText(d, "The Old Testament", o.otTitle);
     if (o.ntTitle) d = setText(d, "The New Testament", o.ntTitle);
+
+    // running heads: "page" -> "Muka Surat" (the PAGE / STYLEREF fields themselves are untouched)
+    const pageWord = o.pageWord || "Muka Surat";
+    for (const n of Object.keys(zip.files)) {
+      if (!/^word\/header\d+\.xml$/.test(n)) continue;
+      const h = await zip.file(n).async("string");
+      zip.file(n, h.split('<w:t xml:space="preserve">page </w:t>').join('<w:t xml:space="preserve">' + esc(pageWord) + ' </w:t>'));
+    }
+
+    // optional typeface / body size, changed in styles.xml only (every style keeps its own size, spacing and layout)
+    if (o.font || o.bodySize) {
+      let st = await zip.file("word/styles.xml").async("string");
+      const q = (f) => String(f).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+      if (o.font) {
+        const num = o.numFont || (/^georgia$/i.test(o.font) ? "Calibri" : o.font);   // Georgia digits are old-style, so keep lining digits for verse numbers
+        st = st.split('"Garamond"').join('"' + q(o.font) + '"').split('"Calibri"').join('"' + q(num) + '"');
+      }
+      if (o.bodySize) {
+        const sz = Math.round(o.bodySize * 2), line = Math.round(sz * 11.667);        // 9 pt -> sz 18, line 210 as in the template
+        st = st.replace(/(<w:rPrDefault>[\s\S]*?<w:sz w:val=")\d+("\/><w:szCs w:val=")\d+/, "$1" + sz + "$2" + sz)
+               .replace(/(<w:pPrDefault>[\s\S]*?w:line=")\d+/, "$1" + line)
+               .replace(/(w:styleId="ChapterNumber"[\s\S]*?w:line=")\d+/, "$1" + line * 3);
+      }
+      zip.file("word/styles.xml", st);
+    }
 
     zip.file("word/document.xml", d);
     return zip.generateAsync({ type: o.type || "blob", compression: "DEFLATE", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
