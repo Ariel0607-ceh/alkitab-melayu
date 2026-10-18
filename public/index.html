@@ -125,6 +125,7 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
       <div class="row r3"><div><label>Kitab</label><select id="aBook"></select></div><div><label>Pasal</label><input id="aCh" type="number" min="1" value="1"></div><div><label>Ayat</label><input id="aV" type="number" min="1" value="1"></div></div>
       <div class="row"><div><label>Nama kitab dalam terjemahan ini</label><input id="aBN"></div></div>
       <div class="row"><div><label>Teks ayat</label><textarea id="aText" placeholder="Taip ayat di sini…"></textarea></div></div>
+      <div class="row"><div><label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink)"><input type="checkbox" id="aPara" style="width:auto;padding:0;accent-color:var(--gold)"> ¶ Perenggan baharu bermula di ayat ini</label></div></div>
       <div class="bar"><button class="btn gold" id="aSave">Simpan &amp; seterusnya</button><span style="color:var(--mute);font-size:12px">Ctrl + Enter</span></div>
       <h3 style="margin-top:28px" id="aHead">Ayat dalam pasal ini</h3>
       <div id="aList"></div>
@@ -199,7 +200,7 @@ async function renderReader(){
  let h=`<div class="title">${esc(bn(b))} ${u.c}</div>`;
  if(!vs.length)h+=`<div class="empty">Belum ada ayat untuk pasal ini.</div>`;
  else{h+=`<div style="--n:${sel.length}"><div class="vhead" style="--n:${sel.length}"><span></span>${sel.map(t=>`<span>${esc(t.name)}<small>${esc(t.translator||"")}</small><em class="bkn">${esc(bkName(t.id,u.b))}</em></span>`).join("")}</div>`;
-  h+=vs.map(v=>`<div class="vrow" style="--n:${sel.length}"><div class="vn">${v}</div>${sel.map(t=>{const x=S.v[vk(t.id,u.b,u.c,v)];return `<div class="vt ${x?"":"none"}"><span class="lbl">${esc(t.name)} · ${esc(bkName(t.id,u.b))}</span>${x?esc(x):"—"}</div>`}).join("")}</div>`).join("")+`</div>`}
+  h+=vs.map(v=>`<div class="vrow" style="--n:${sel.length}"><div class="vn">${v}</div>${sel.map(t=>{const x=S.v[vk(t.id,u.b,u.c,v)];return `<div class="vt ${x?"":"none"}"><span class="lbl">${esc(t.name)} · ${esc(bkName(t.id,u.b))}</span>${x?esc(x.replace(/^¶\s*/,"")):"—"}</div>`}).join("")}</div>`).join("")+`</div>`}
  h+=`<div class="pager"><button class="btn" id="prev">← Sebelum</button><button class="btn" id="next">Seterusnya →</button></div>`;
  R.innerHTML=h;$("prev").onclick=()=>step(-1);$("next").onclick=()=>step(1);
 }
@@ -226,15 +227,15 @@ async function renderList(){
  const rows=Object.keys(S.v).map(k=>k.split("|")).filter(p=>p[0]===t&&p[1]===b&&+p[2]===c).map(p=>+p[3]).sort((x,y)=>x-y);
  $("aList").innerHTML=rows.map(v=>`<div class="item"><div><small>Ayat ${v}</small><p>${esc(S.v[vk(t,b,c,v)])}</p></div><div class="acts"><button class="btn sm" data-edit="${v}">Ubah</button><button class="btn sm del" data-rm="${v}">Padam</button></div></div>`).join("")||`<small style="color:var(--mute)">Belum ada ayat.</small>`;
 }
-function fillText(){const x=S.v[vk($("aTr").value,$("aBook").value,+$("aCh").value,+$("aV").value)];$("aText").value=x||""}
+function fillText(){const x=S.v[vk($("aTr").value,$("aBook").value,+$("aCh").value,+$("aV").value)]||"",p=x.startsWith("¶");$("aPara").checked=p;$("aText").value=p?x.replace(/^¶\s*/,""):x}
 ["aTr","aBook","aCh"].forEach(id=>$(id).addEventListener("change",()=>{S.ui.b=$("aBook").value;renderList().then(fillText);fillBN()}));
 $("aV").addEventListener("input",fillText);
 $("aBook").addEventListener("change",()=>{const m=BK[$("aBook").value].ch;$("aCh").max=m;if(+$("aCh").value>m)$("aCh").value=m;renderList()});
 async function saveVerse(){
- const t=$("aTr").value,b=$("aBook").value,c=+$("aCh").value,v=+$("aV").value,x=$("aText").value.trim();
+ const t=$("aTr").value,b=$("aBook").value,c=+$("aCh").value,v=+$("aV").value,x0=$("aText").value.trim().replace(/^¶\s*/,""),x=x0&&$("aPara").checked?"¶ "+x0:x0;
  if(!t)return toast("Tambah terjemahan dahulu");if(!c||!v)return toast("Isi pasal dan ayat");if(!x)return toast("Teks ayat kosong");
  try{await op({op:"verse",tid:t,book:b,ch:c,v,text:x})}catch(e){return toast(e.message)}S.v[vk(t,b,c,v)]=x;S.ui.b=b;S.ui.c=c;if(!S.ui.sel.includes(t)&&S.ui.sel.length<4)S.ui.sel.push(t);save();
- $("aV").value=v+1;$("aText").value=S.v[vk(t,b,c,v+1)]||"";renderAdmin();$("aText").focus();toast(`Disimpan — ${bn(BK[b])} ${c}:${v}`)}
+ $("aV").value=v+1;fillText();renderAdmin();$("aText").focus();toast(`Disimpan — ${bn(BK[b])} ${c}:${v}`)}
 $("aSave").onclick=saveVerse;
 $("aText").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();saveVerse()}});
 $("aList").onclick=async e=>{const t=$("aTr").value,b=$("aBook").value,c=+$("aCh").value;
