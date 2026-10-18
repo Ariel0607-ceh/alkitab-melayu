@@ -10,35 +10,104 @@
   const DROP = (n) => `<w:p><w:pPr><w:pStyle w:val="ChapterNumber"/><w:framePr w:dropCap="drop" w:lines="3" w:wrap="around" w:vAnchor="text" w:hAnchor="text"/></w:pPr>${T(n)}</w:p>`;
   const setText = (xml, from, to) => xml.split(`>${from}<`).join(`>${esc(to)}<`);
 
-  // ---- Malay hyphenation: optional (soft) hyphens inserted at syllable breaks; Word only shows one at a line end ----
-  const VOW = "aeiouAEIOU", DIGRAPH = ["ng", "ny", "sy", "kh", "gh"];
-  function hyphPoints(w) {
-    const u = [];                                              // units: vowel, or consonant (ng ny sy kh gh count as one)
+  // ---- Malay hyphenation (Pedoman Umum Ejaan, MABBIM 1991): optional (soft) hyphens; Word shows one only at a line end ----
+  // 1) base words by syllable: V-V split (ai/au/oi never), V-C-V -> V-CV, V-CC-V -> VC-CV, 3+ consonants -> after the first;
+  //    ng ny sy kh gh count as one consonant; a single-vowel syllable is never left at the end or start of a line.
+  // 2) derived words may also break at prefix/suffix boundaries (makan-an, me-rasa-kan, mem-bantu, pergi-lah); the root is kept
+  //    whole when short, and "-i" is never split. An affix is only recognised if its root also occurs as a word in the
+  //    same translation, so "perang" or "terang" are not cut as per-ang / ter-ang.
+  const isV = (c) => c !== undefined && "aeiou".includes(c.toLowerCase());
+  const dip = (a, b) => ["ai", "au", "oi"].includes((a + b).toLowerCase());
+  const DIG = ["ng", "ny", "sy", "kh", "gh"], DIG_OLD = DIG.concat(["dj", "tj", "sj", "nj", "ch"]);   // old spelling: dj tj sj nj ch
+  function units(w, old) {
+    const D = old ? DIG_OLD : DIG, u = [];
     for (let i = 0; i < w.length;) {
-      if (VOW.includes(w[i])) { u.push({ v: true, s: i }); i++; }
-      else { u.push({ v: false, s: i }); i += DIGRAPH.includes(w.slice(i, i + 2).toLowerCase()) ? 2 : 1; }
+      const two = w.slice(i, i + 2).toLowerCase();
+      if (old && two === "oe") { u.push({ v: true, s: i }); i += 2; }
+      else if (isV(w[i])) { u.push({ v: true, s: i }); i++; }
+      else { u.push({ v: false, s: i }); i += D.includes(two) ? 2 : 1; }
     }
-    const pts = [];
+    return u;
+  }
+  function syllBreaks(w, old) {
+    const u = units(w, old), pts = [];
     for (let k = 0; k < u.length; k++) {
       if (!u[k].v) continue;
+      if (k + 1 < u.length && u[k + 1].v) { if (!dip(w[u[k].s], w[u[k + 1].s])) pts.push(u[k + 1].s); continue; }
       let j = k + 1;
       while (j < u.length && !u[j].v) j++;
-      const n = j - k - 1;                                     // consonant units between this vowel and the next
-      if (j >= u.length || n === 0) continue;                  // word-final cluster, or two vowels in a row: never split
-      pts.push(n === 1 ? u[k + 1].s : u[k + 2].s);             // V-C-V -> V-CV ; V-CC..-V -> VC-C..V
+      const n = j - k - 1;
+      if (j >= u.length || n === 0) continue;
+      pts.push(n === 1 ? u[k + 1].s : u[k + 2].s);
     }
-    return pts.filter((i) => i >= 2 && w.length - i >= 3);     // keep at least 2 letters before and 3 after
+    return pts;
+  }
+  const loneStart = (w, i) => isV(w[i]) && (i + 1 >= w.length || (isV(w[i + 1]) && !dip(w[i], w[i + 1])));
+  const loneEnd = (w, i) => isV(w[i - 1]) && (i < 2 || (isV(w[i - 2]) && !dip(w[i - 2], w[i - 1])));
+  const okBreak = (w, i, after) => i >= 2 && w.length - i >= after && !loneStart(w, i) && !loneEnd(w, i);
+
+  const PRE = ["memper", "diper", "terper", "meng", "meny", "mem", "men", "peng", "peny", "pem", "pen", "ber", "ter", "per", "me", "pe", "di", "ke", "se"];
+  const RESTORE = { meng: ["", "k"], meny: ["s"], mem: ["", "p"], men: ["", "t"], peng: ["", "k"], peny: ["s"], pem: ["", "p"], pen: ["", "t"] };
+  function splitWord(w, h) {
+    const SUF = h.old ? ["kan", "lah", "kah", "pun", "nya", "nja", "an", ""] : ["kan", "lah", "kah", "pun", "nya", "an", ""];
+    const known = (r) => r.length >= 4 && ((h.V.get(r) || 0) >= 2 || (r.length >= 5 && r.endsWith("i") && (h.V.get(r.slice(0, -1)) || 0) >= 2));
+    let best = null;
+    for (const s of SUF) for (const p of [""].concat(PRE)) {
+      if (!p && !s) continue;
+      const mid = w.slice(p.length, w.length - s.length);
+      if (w.slice(0, p.length) !== p || (s && w.slice(w.length - s.length) !== s) || mid.length < 3) continue;
+      for (const r0 of RESTORE[p] || [""]) {
+        if (!known(r0 + mid)) continue;
+        const c = { p, s, dropped: r0 !== "", score: p.length + s.length - (r0 ? 0.5 : 0) };
+        if (!best || c.score > best.score) best = c;
+      }
+    }
+    return best;
+  }
+  function pointsFor(w, h) {
+    const sp = splitWord(w, h);
+    let pts;
+    if (!sp) pts = syllBreaks(w, h.old).filter((i) => okBreak(w, i, 3));
+    else {
+      const pe = sp.p.length, ss = w.length - sp.s.length;
+      pts = [];
+      if (sp.dropped) pts = syllBreaks(w, h.old).filter((i) => i < ss && okBreak(w, i, 3));      // meN-/peN- that swallowed the root's first letter: me-nu-lis
+      else {
+        if (sp.p && okBreak(w, pe, 3)) pts.push(pe);
+        if (w.slice(pe, ss).length >= h.rootSplit) pts = pts.concat(syllBreaks(w.slice(pe, ss), h.old).map((i) => i + pe).filter((i) => okBreak(w, i, 3)));
+      }
+      if (sp.s && okBreak(w, ss, 2)) pts.push(ss);
+    }
+    pts = [...new Set(pts)].sort((a, b) => a - b);
+    for (let i = pts.length - 2; i >= 0; i--) if (pts[i + 1] - pts[i] < 2) pts.splice(i, 1);   // never leave a one-letter piece (suffix boundary wins)
+    return pts;
+  }
+  function makeHyph(o) {
+    const V = new Map();
+    let oldHits = 0;
+    for (const c in o.verses || {}) for (const r of o.verses[c]) for (const m of String(r.text || "").toLowerCase().matchAll(/[a-z]+/g)) {
+      V.set(m[0], (V.get(m[0]) || 0) + 1);
+      if (/dj|tj|sj/.test(m[0])) oldHits++;
+    }
+    const ex = {};
+    for (const [k, v] of Object.entries(o.hyphenExceptions || {})) {                       // {"Yerusalem": "Ye-ru-sa-lem"}
+      let n = 0;
+      ex[k.toLowerCase()] = v.split("-").slice(0, -1).map((part) => (n += part.length));
+    }
+    return { V, ex, cache: new Map(), rootSplit: o.rootSplit == null ? 7 : o.rootSplit,
+             old: o.oldSpelling != null ? !!o.oldSpelling : oldHits >= 10 };                // old spelling is auto-detected (dj/tj/sj words)
   }
   const SOFT = '</w:t><w:softHyphen/><w:t xml:space="preserve">';
-  function TH(text, on) {
-    if (!on) return T(text);
+  function TH(text, h) {
+    if (!h) return T(text);
     let out = "", last = 0, m;
     const re = /[A-Za-z]{7,}/g;
     while ((m = re.exec(text))) {
       out += esc(text.slice(last, m.index));
-      const w = m[0], pts = hyphPoints(w);
+      const w = m[0], k = w.toLowerCase();
+      if (!h.cache.has(k)) h.cache.set(k, h.ex[k] || pointsFor(k, h));
       let a = 0;
-      for (const i of pts) { out += esc(w.slice(a, i)) + SOFT; a = i; }
+      for (const i of h.cache.get(k)) { out += esc(w.slice(a, i)) + SOFT; a = i; }
       out += esc(w.slice(a));
       last = m.index + w.length;
     }
@@ -96,7 +165,7 @@
     const line = o.bodySize ? Math.round(Math.round(o.bodySize * 2) * 11.667) : 210;          // template: 9 pt, exact 10.5 pt leading
     const popt = { min: o.paraMin == null ? 4 : o.paraMin, max: o.paraMax == null ? 5 : o.paraMax,
                    gap: Math.round(line * (o.chapterGapLines == null ? 1 : o.chapterGapLines)),
-                   hyph: o.hyphenate !== false };                                             // Malay hyphenation on by default   // one blank line after each paragraph
+                   hyph: o.hyphenate !== false ? makeHyph(o) : null };                                             // Malay hyphenation on by default   // one blank line after each paragraph
 
     // book bodies, last to first so earlier offsets stay valid
     for (let i = heads.length - 1; i >= 0; i--) {
