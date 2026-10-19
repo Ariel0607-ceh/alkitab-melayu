@@ -177,8 +177,13 @@
       if (endPos < e1) endPos = d.lastIndexOf("<w:sectPr>");           // last book: closed by the body-level sectPr
       const name = (o.names && o.names[code]) || m[2];
       const head = m[0].replace(/(<w:t xml:space="preserve">)[^<]*(<\/w:t>)/, (_, a, b) => a + esc(name) + b);
-      const body = chapters((o.verses && o.verses[code]) || [], popt);
-      if (!body) { d = d.slice(0, m.index) + head + d.slice(hEnd); continue; }   // no verses: keep the template's dummy text as is
+      let body = chapters((o.verses && o.verses[code]) || [], popt);
+      if (!body) {                                                                // no verses for this book in the chosen translation
+        const none = o.emptyText === undefined ? "No Translation Available" : o.emptyText;
+        if (none === null) { d = d.slice(0, m.index) + head + d.slice(hEnd); continue; }   // emptyText:null keeps the template's dummy text
+        // title + chapter 1, verse 1 = the message (a plain numbered line: a drop cap on a one-line block is not reliable)
+        body = P("VerseFirst", NUM(1) + T(none), 0);
+      }
       const keepTo = o.keepSectionHeading ? d.indexOf("</w:p>", e1) + 6 : e1;     // optional: keep the "Section Heading" line
       d = d.slice(0, m.index) + head + d.slice(hEnd, keepTo) + body + d.slice(endPos);
     }

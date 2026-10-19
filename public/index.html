@@ -307,7 +307,7 @@ $("xGo").onclick=async()=>{const tid=$("xTr").value,st=$("xSt"),btn=$("xGo");if(
   const blob=await fillBibleDocx(JSZip,buf,{title:$("xTitle").value,line2:$("xLine").value,notes:$("xNotes").value,otTitle:BK.GEN?BK.GEN.g:"",ntTitle:BK.MAT?BK.MAT.g:"",names,verses,font:$("xFont").value.trim(),bodySize:+$("xSize").value||0});
   const t=S.tr.find(x=>x.id===tid),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="Alkitab - "+(t?t.name:"terjemahan")+".docx";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   const empty=FILL_CODES.filter(c=>!verses[c].length).length;
-  st.textContent=`Siap. ${66-empty} kitab ada ayat`+(empty?`, ${empty} kitab guna teks contoh templat.`:".")}
+  st.textContent=`Siap. ${66-empty} kitab ada ayat`+(empty?`, ${empty} kitab tanpa terjemahan.`:".")}
  catch(e){st.textContent="Gagal: "+e.message}
  btn.disabled=false};
 /* custom dropdowns */
