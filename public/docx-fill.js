@@ -11,7 +11,7 @@
   // the NBSP lives inside the small number run, so a line can never end on a number with its verse on the next line
   const NUM = (n) => `<w:r><w:rPr><w:rStyle w:val="VerseNum"/></w:rPr><w:t xml:space="preserve">${n}\u00A0</w:t></w:r>`;
   const P = (style, runs, gap) => `<w:p><w:pPr><w:pStyle w:val="${style}"/>${gap ? `<w:spacing w:after="${gap}"/>` : ""}</w:pPr>${runs}</w:p>`;
-  const DROP = (n) => `<w:p><w:pPr><w:pStyle w:val="ChapterNumber"/><w:framePr w:dropCap="drop" w:lines="3" w:wrap="around" w:vAnchor="text" w:hAnchor="text"/></w:pPr>${T(n)}</w:p>`;
+  const DROP = (n, gap) => `<w:p><w:pPr><w:pStyle w:val="ChapterNumber"/><w:framePr w:dropCap="drop" w:lines="3" ${gap ? `w:hSpace="${gap}" ` : ""}w:wrap="around" w:vAnchor="text" w:hAnchor="text"/></w:pPr>${T(n)}</w:p>`;
   const setText = (xml, from, to) => xml.split(`>${from}<`).join(`>${esc(to)}<`);
 
   // ---- Malay hyphenation (Pedoman Umum Ejaan, MABBIM 1991): optional (soft) hyphens; Word shows one only at a line end ----
@@ -147,7 +147,7 @@
         prev = txt;
       }
       if (!manual && groups.length > 1 && groups[groups.length - 1].length === 1) groups[groups.length - 2].push(groups.pop()[0]);
-      out += DROP(ch);
+      out += DROP(ch, opt.capGap);
       groups.forEach((g, gi) => {
         const style = gi === 0 ? "VerseFirst" : "Verse", last = gi === groups.length - 1;
         let runs = "";
@@ -169,7 +169,8 @@
     const line = o.bodySize ? Math.round(Math.round(o.bodySize * 2) * 11.667) : 210;          // template: 9 pt, exact 10.5 pt leading
     const popt = { min: o.paraMin == null ? 4 : o.paraMin, max: o.paraMax == null ? 5 : o.paraMax,
                    gap: Math.round(line * (o.chapterGapLines == null ? 1 : o.chapterGapLines)),
-                   hyph: o.hyphenate !== false ? makeHyph(o) : null };                                             // Malay hyphenation on by default   // one blank line after each paragraph
+                   hyph: o.hyphenate !== false ? makeHyph(o) : null,
+                   capGap: o.dropCapGap == null ? 110 : o.dropCapGap };                      // space right of the chapter number (twips; 20 = 1 pt)                                             // Malay hyphenation on by default   // one blank line after each paragraph
 
     // which books go into the document: all of them, or only those that have verses
     const hasText = CODES.map((c) => ((o.verses && o.verses[c]) || []).some((r) => String(r.text || "").trim()));
