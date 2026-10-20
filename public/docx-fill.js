@@ -170,7 +170,7 @@
     const popt = { min: o.paraMin == null ? 4 : o.paraMin, max: o.paraMax == null ? 5 : o.paraMax,
                    gap: Math.round(line * (o.chapterGapLines == null ? 1 : o.chapterGapLines)),
                    hyph: o.hyphenate !== false ? makeHyph(o) : null,
-                   capGap: o.dropCapGap == null ? 110 : o.dropCapGap };                      // space right of the chapter number (twips; 20 = 1 pt)                                             // Malay hyphenation on by default   // one blank line after each paragraph
+                   capGap: o.dropCapGap == null ? 85 : o.dropCapGap };                      // space right of the chapter number (twips; 20 = 1 pt)                                             // Malay hyphenation on by default   // one blank line after each paragraph
 
     // which books go into the document: all of them, or only those that have verses
     const hasText = CODES.map((c) => ((o.verses && o.verses[c]) || []).some((r) => String(r.text || "").trim()));
