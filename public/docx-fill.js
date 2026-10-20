@@ -3,7 +3,7 @@
 (function (root) {
   const CODES = "GEN EXO LEV NUM DEU JOS JDG RUT 1SA 2SA 1KI 2KI 1CH 2CH EZR NEH EST JOB PSA PRO ECC SNG ISA JER LAM EZK DAN HOS JOL AMO OBA JON MIC NAM HAB ZEP HAG ZEC MAL MAT MRK LUK JHN ACT ROM 1CO 2CO GAL EPH PHP COL 1TH 2TH 1TI 2TI TIT PHM HEB JAS 1PE 2PE 1JN 2JN 3JN JUD REV".split(" ");
   // front matter pages (title + a placeholder for the text you will write); override with the frontMatter option
-  const FRONT = [{ title: "Prakata" }, { title: "Latar Belakang Penterjemah" }, { title: "Sejarah dan Kronologi Edisi Ini" }];
+  const FRONT = [{ title: "Kalam Pendahuluan" }, { title: "Riwayat Penterjemah" }, { title: "Jejak Warkah" }];
   const ROMAN = ["", "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x", "xi", "xii", "xiii", "xiv", "xv"];
   const NT0 = 39;                                                 // index of Matthew in CODES
   const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
