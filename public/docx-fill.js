@@ -2,6 +2,10 @@
    drop-cap, header and field in the template is left untouched. Works in the browser and in Node. */
 (function (root) {
   const CODES = "GEN EXO LEV NUM DEU JOS JDG RUT 1SA 2SA 1KI 2KI 1CH 2CH EZR NEH EST JOB PSA PRO ECC SNG ISA JER LAM EZK DAN HOS JOL AMO OBA JON MIC NAM HAB ZEP HAG ZEC MAL MAT MRK LUK JHN ACT ROM 1CO 2CO GAL EPH PHP COL 1TH 2TH 1TI 2TI TIT PHM HEB JAS 1PE 2PE 1JN 2JN 3JN JUD REV".split(" ");
+  // front matter pages (title + a placeholder for the text you will write); override with the frontMatter option
+  const FRONT = [{ title: "Prakata" }, { title: "Latar Belakang Penterjemah" }, { title: "Sejarah dan Kronologi Edisi Ini" }];
+  const ROMAN = ["", "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x", "xi", "xii", "xiii", "xiv", "xv"];
+  const NT0 = 39;                                                 // index of Matthew in CODES
   const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const T = (t) => `<w:r><w:t xml:space="preserve">${esc(t)}</w:t></w:r>`;
   // the NBSP lives inside the small number run, so a line can never end on a number with its verse on the next line
@@ -167,35 +171,97 @@
                    gap: Math.round(line * (o.chapterGapLines == null ? 1 : o.chapterGapLines)),
                    hyph: o.hyphenate !== false ? makeHyph(o) : null };                                             // Malay hyphenation on by default   // one blank line after each paragraph
 
+    // which books go into the document: all of them, or only those that have verses
+    const hasText = CODES.map((c) => ((o.verses && o.verses[c]) || []).some((r) => String(r.text || "").trim()));
+    const keep = CODES.map((c, i) => (o.onlyAvailable ? hasText[i] : true));
+    if (!keep.some(Boolean)) throw new Error("Tiada terjemahan untuk dieksport");
+    const firstKept = { ot: keep.findIndex((k, i) => k && i < NT0), nt: keep.findIndex((k, i) => k && i >= NT0) };
+    const noOT = firstKept.ot < 0, noNT = firstKept.nt < 0;
+    const sectAfter = (i) => { const he = heads[i].index + heads[i][0].length; return d.slice(he, d.indexOf("</w:p>", he) + 6); };
+    const firstSect = { ot: sectAfter(0), nt: sectAfter(NT0) };   // Genesis / Matthew section break: running heads + page-number restart
+    const TT = '<w:p><w:pPr><w:pStyle w:val="TestamentTitle"/>';
+    const ntTitleAt = d.indexOf(TT, d.indexOf(TT) + 1);             // "The New Testament" page sits between Malachi and Matthew
+
     // book bodies, last to first so earlier offsets stay valid
     for (let i = heads.length - 1; i >= 0; i--) {
       const m = heads[i], code = CODES[i];
       const hEnd = m.index + m[0].length;
       const e1 = d.indexOf("</w:p>", hEnd) + 6;                       // end of the 1-column section break
-      const bound = i < heads.length - 1 ? heads[i + 1].index : d.length;
-      let endPos = d.lastIndexOf("<w:p><w:pPr><w:sectPr>", bound);    // the 2-column section break closing the book
-      if (endPos < e1) endPos = d.lastIndexOf("<w:sectPr>");           // last book: closed by the body-level sectPr
+      const bound = i === NT0 - 1 ? ntTitleAt : i < heads.length - 1 ? heads[i + 1].index : d.length;
+      let endPos = d.lastIndexOf("<w:p><w:pPr><w:sectPr>", bound), blockEnd;   // the 2-column section break closing the book
+      if (endPos < e1) { endPos = d.lastIndexOf("<w:sectPr>"); blockEnd = endPos; }   // last book: closed by the body-level sectPr
+      else blockEnd = d.indexOf("</w:p>", endPos) + 6;
+      if (!keep[i]) { d = d.slice(0, m.index) + d.slice(blockEnd); continue; }         // book left out of this edition
+      const first = i === firstKept.ot ? "ot" : i === firstKept.nt ? "nt" : null;     // first book of a testament takes over the running heads
+      let sect = first ? firstSect[first] : d.slice(hEnd, e1);
+      if (first === "nt" && noOT) sect = sect.replace("<w:pgNumType/>", '<w:pgNumType w:start="1"/>');   // NT-only: page 1 starts here
       const name = (o.names && o.names[code]) || m[2];
       const head = m[0].replace(/(<w:t xml:space="preserve">)[^<]*(<\/w:t>)/, (_, a, b) => a + esc(name) + b);
       let body = chapters((o.verses && o.verses[code]) || [], popt);
       if (!body) {                                                                // no verses for this book in the chosen translation
         const none = o.emptyText === undefined ? "No Translation Available" : o.emptyText;
-        if (none === null) { d = d.slice(0, m.index) + head + d.slice(hEnd); continue; }   // emptyText:null keeps the template's dummy text
+        if (none === null) { d = d.slice(0, m.index) + head + sect + d.slice(e1); continue; }   // emptyText:null keeps the template's dummy text
         // title + chapter 1, verse 1 = the message (a plain numbered line: a drop cap on a one-line block is not reliable)
         body = P("VerseFirst", NUM(1) + T(none), 0);
       }
-      const keepTo = o.keepSectionHeading ? d.indexOf("</w:p>", e1) + 6 : e1;     // optional: keep the "Section Heading" line
-      d = d.slice(0, m.index) + head + d.slice(hEnd, keepTo) + body + d.slice(endPos);
+      const extra = o.keepSectionHeading ? d.slice(e1, d.indexOf("</w:p>", e1) + 6) : "";   // optional: keep the "Section Heading" line
+      d = d.slice(0, m.index) + head + sect + extra + body + d.slice(endPos);
     }
 
-    // contents page entries
+    // testament title pages with no books
+    const otAt = d.indexOf(TT);
+    let ntAt = d.indexOf(TT, otAt + 1);
+    if (noOT) { d = d.slice(0, otAt) + d.slice(ntAt); ntAt = otAt; }
+    if (noNT) d = d.slice(0, ntAt) + d.slice(d.lastIndexOf("<w:sectPr>"));
+    else if (noOT) d = d.slice(0, ntAt) + d.slice(ntAt).replace("<w:pgNumType/>", '<w:pgNumType w:fmt="lowerRoman"/>').replace("<w:pgNumType/>", '<w:pgNumType w:fmt="lowerRoman"/>');
+    { const si = d.lastIndexOf("<w:sectPr>");                                  // the last section needs a paragraph of its own
+      if (/<\/w:sectPr><\/w:pPr><\/w:p>$/.test(d.slice(0, si))) d = d.slice(0, si) + "<w:p/>" + d.slice(si); }
+
+    // contents page: drop entries / sub-headings of books that are not in this edition
+    const paraAt = (k) => [d.lastIndexOf("<w:p>", k), d.indexOf("</w:p>", k) + 6];
+    const cut = (a, b) => { d = d.slice(0, a) + d.slice(b); };
+    heads.forEach((m, i) => {
+      if (keep[i]) return;
+      const k = d.indexOf("PAGEREF bk_" + m[1] + " ");
+      if (k >= 0) cut(...paraAt(k));
+    });
+    const SUB = '<w:p><w:pPr><w:pStyle w:val="TocSub"/></w:pPr>', COLS3 = '<w:cols w:space="288" w:num="3"';
+    if (noNT) {
+      cut(...paraAt(d.lastIndexOf(COLS3)));                                    // NT entries' 3-column section break
+      const a = d.lastIndexOf(SUB), b1 = d.indexOf("</w:p>", a) + 6;           // "The New Testament" sub-heading + its section break
+      cut(a, d.indexOf("</w:p>", b1) + 6);
+    }
+    if (noOT) {
+      cut(...paraAt(d.indexOf(COLS3)));                                        // OT entries' 3-column section break
+      const a = d.indexOf(SUB);                                                // "The Old Testament" sub-heading
+      cut(a, d.indexOf("</w:p>", a) + 6);
+    }
+
+    // contents page names
     heads.forEach((m, i) => {
       const name = (o.names && o.names[CODES[i]]) || m[2];
       const re = new RegExp('(<w:t xml:space="preserve">)[^<]*(</w:t></w:r><w:r><w:t xml:space="preserve">\\t</w:t></w:r><w:fldSimple w:instr="PAGEREF bk_' + m[1] + ' )');
       d = d.replace(re, (_, a, b) => a + esc(name) + b);
     });
 
+    // front matter: contents entries (roman page numbers, live PAGEREF fields) + one titled page each
+    const fm = o.frontMatter === undefined ? FRONT : o.frontMatter;
+    {
+      const TF = '<w:p><w:pPr><w:pStyle w:val="TocFront"/>';
+      const a = d.indexOf(TF), z = d.indexOf("</w:p>", d.lastIndexOf(TF)) + 6;
+      d = d.slice(0, a) + fm.map((f, i) => TF + '<w:tabs><w:tab w:val="right" w:pos="7488" w:leader="dot"/></w:tabs></w:pPr>' + T(f.title) +
+        '<w:r><w:t xml:space="preserve">\t</w:t></w:r><w:fldSimple w:instr="PAGEREF fm_' + (i + 1) + ' \\h">' + T(ROMAN[4 + i] || String(4 + i)) + '</w:fldSimple></w:p>').join("") + d.slice(z);
+      const PH = '<w:p><w:pPr><w:pStyle w:val="FrontText"/><w:spacing w:before="3000"/></w:pPr>';
+      const pa = d.indexOf(PH), pb = d.indexOf("</w:p>", pa) + 6;
+      const pages = fm.map((f, i) => '<w:p><w:pPr><w:pStyle w:val="TocTitle"/>' + (i ? "<w:pageBreakBefore/>" : "") + '</w:pPr><w:bookmarkStart w:id="' + (9001 + i) + '" w:name="fm_' + (i + 1) + '"/>' +
+        T(f.title) + '<w:bookmarkEnd w:id="' + (9001 + i) + '"/></w:p>' +
+        String(f.text || "[Tulis butiran di sini.]").split(/\n\s*\n/).map((t) => P("Verse", T(t.trim()))).join("")).join("");
+      if (fm.length) d = d.slice(0, pa) + pages + d.slice(pb);
+      else d = d.slice(0, pa) + d.slice(d.indexOf("</w:p>", pb) + 6);          // no front matter: drop the placeholder page and its section break
+    }
+
     // front page + testament titles
+    d = setText(d, "CONTENTS", o.contentsTitle || "KANDUNGAN");
     if (o.title) d = setText(d, "BIBLE TITLE", o.title);
     if (o.line2) d = setText(d, "Translation · Edition · Year", o.line2);
     if (o.notes) d = setText(d, "Copyright, publisher, ISBN and edition notes go here.", o.notes);
