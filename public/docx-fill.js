@@ -295,6 +295,14 @@
                .replace(/(<w:pPrDefault>[\s\S]*?w:line=")\d+/, "$1" + line)
       }
       st = st.replace(/(w:styleId="ChapterNumber"[\s\S]*?w:line=")\d+/, "$1" + (line * 3 - 20));   // drop cap: just under 3 body lines
+      if (o.titleCaps !== false) {                                       // titles in CAPITAL LETTERS (style only; the text itself is untouched, so the contents entries and verses keep their case)
+        for (const id of ["Heading1", "TestamentTitle", "TocSub", "TocTitle", "FrontTitle"]) {
+          st = st.replace(new RegExp('<w:style [^>]*w:styleId="' + id + '"[\\s\\S]*?</w:style>', "g"), (blk) =>
+            blk.includes("<w:smallCaps/>") ? blk.replace("<w:smallCaps/>", "<w:caps/>")
+            : blk.includes("<w:bCs/>") ? blk.replace("<w:bCs/>", "<w:bCs/><w:caps/>")
+            : blk.replace("<w:color", "<w:caps/><w:color"));
+        }
+      }
       if (o.hyphenLang) st = st.replace(/(<w:rPrDefault>[\s\S]*?<w:szCs w:val="\d+"\/>)(<\/w:rPr>)/, "$1<w:lang w:val=\"" + q(o.hyphenLang) + "\"/>$2");
       zip.file("word/styles.xml", st);
     }
