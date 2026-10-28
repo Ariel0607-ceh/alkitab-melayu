@@ -78,7 +78,9 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
 .ptitle{font:600 clamp(22px,3vw,30px) "Times New Roman",Times,"Liberation Serif",serif;text-transform:uppercase;letter-spacing:.06em;text-align:center;margin:0 0 20px}
 .pcols{column-count:2;-webkit-column-count:2;column-gap:28px;-webkit-column-gap:28px;text-align:justify;hyphens:manual;font:400 15px/1.42 "Times New Roman",Times,"Liberation Serif",serif;orphans:2;widows:2}
 .pchap{margin:0 0 1.35em}
-.pdrop{float:left;font:700 4.2em/.8 "Times New Roman",Times,"Liberation Serif",serif;margin:.03em .09em 0 0}
+.pdrop{float:left;font:700 5.15em/.78 "Times New Roman",Times,"Liberation Serif",serif;margin:0 .10em 0 0;position:relative;top:.008em}
+.pcols.onecol{column-count:1;-webkit-column-count:1;max-width:34em;margin:0 auto}
+.pcols.nohy{hyphens:none;-webkit-hyphens:none}
 .pv{margin:0;text-indent:1.15em}.pv.first{text-indent:0}
 .vn{font:700 .72em Calibri,Arial,sans-serif;position:relative;top:-.38em;margin-right:.14em}
 @media(max-width:760px){.pcols{column-count:1;-webkit-column-count:1}}
@@ -322,14 +324,17 @@ $("xGo").onclick=async()=>{const tid=$("xTr").value,st=$("xSt"),btn=$("xGo");if(
  btn.disabled=false};
 
 /* print view */
-function modeChips(){const m=S.ui.mode==="print"?"print":"parallel";return `<button class="chip ${m==="parallel"?"on":""}" data-mode="parallel">Selari<small>bandingkan terjemahan</small></button><button class="chip ${m==="print"?"on":""}" data-mode="print">Cetakan<small>susun atur seperti dokumen Word</small></button>`+(m==="print"?`<button class="chip ${S.ui.one?"on":""}" data-one="1">Sefasal<small>${S.ui.one?"satu fasal sahaja: hidup":"seluruh kitab: mati"}</small></button>`:"")}
-$("rMode").onclick=e=>{const c=e.target.closest(".chip");if(!c)return;if(c.dataset.one)S.ui.one=!S.ui.one;else S.ui.mode=c.dataset.mode;save();renderReader()};
+function modeChips(){const u=S.ui,m=u.mode==="print"?"print":"parallel";
+ let h=`<button class="chip ${m==="parallel"?"on":""}" data-mode="parallel">Selari<small>bandingkan terjemahan</small></button><button class="chip ${m==="print"?"on":""}" data-mode="print">Cetakan<small>susun atur seperti dokumen Word</small></button>`;
+ if(m==="print")h+=`<button class="chip ${u.one?"on":""}" data-one="1">Sefasal<small>${u.one?"satu fasal sahaja: hidup":"seluruh kitab: mati"}</small></button><button class="chip ${u.oneCol?"":"on"}" data-col="1">2 Lajur<small>${u.oneCol?"satu lajur: mati":"dua lajur: hidup"}</small></button><button class="chip ${u.noHy?"":"on"}" data-hy="1">Pemenggalan<small>${u.noHy?"perkataan tidak dipecah: mati":"pecah perkataan di hujung baris: hidup"}</small></button>`;
+ return h}
+$("rMode").onclick=e=>{const c=e.target.closest(".chip");if(!c)return;const d=c.dataset,u=S.ui;if(d.one)u.one=!u.one;else if(d.col)u.oneCol=!u.oneCol;else if(d.hy)u.noHy=!u.noHy;else u.mode=d.mode;save();renderReader()};
 async function renderPrint(t){const u=S.ui,R=$("reading");R.innerHTML='<div class="empty">Memuatkan…</div>';
  let rows;try{rows=await api(`/api/export?tid=${encodeURIComponent(t.id)}&book=${encodeURIComponent(u.b)}`)}catch(e){return R.innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
  const has=rows.some(r=>!u.one||+r.ch===+u.c);
  const body=has?BibleLayout.html(rows,{chapter:u.one?u.c:0}):'<p class="pv first"><span class="vn">1</span>No Translation Available</p>';
  const nav=u.one?["Fasal sebelum","Fasal seterusnya"]:["Kitab sebelum","Kitab seterusnya"];
- R.innerHTML=`<div class="paper"><h2 class="ptitle">${esc(bkName(t.id,u.b))}</h2><div class="pcols">${body}</div></div><div class="pager"><button class="btn" id="prev">← ${nav[0]}</button><button class="btn" id="next">${nav[1]} →</button></div>`;
+ R.innerHTML=`<div class="paper"><h2 class="ptitle">${esc(bkName(t.id,u.b))}</h2><div class="pcols${u.oneCol?" onecol":""}${u.noHy?" nohy":""}">${body}</div></div><div class="pager"><button class="btn" id="prev">← ${nav[0]}</button><button class="btn" id="next">${nav[1]} →</button></div>`;
  $("prev").onclick=()=>step(-1);$("next").onclick=()=>step(1);
  if(!u.one&&u.c>1){const el=$("pc-"+u.c);if(el)el.scrollIntoView({block:"start"})}}
 
