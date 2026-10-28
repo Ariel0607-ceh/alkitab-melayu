@@ -124,14 +124,14 @@
   // verse is never left on its own: it joins the previous paragraph.
   // Paragraphs have no gap between them; only the end of a chapter gets one blank line (never on the drop-cap paragraph itself).
   const SPACER = '<w:p><w:pPr><w:pStyle w:val="Verse"/><w:ind w:firstLine="0"/></w:pPr></w:p>';
-  function chapters(rows, opt) {
-    const by = new Map();
+  // splits one book's rows into chapters -> paragraphs -> verses (shared by the Word export and the on-screen print view)
+  function layout(rows, opt) {
+    const by = new Map(), res = [];
     for (const r of rows) {
       if (!String(r.text || "").trim()) continue;
       if (!by.has(+r.ch)) by.set(+r.ch, []);
       by.get(+r.ch).push(r);
     }
-    let out = "";
     for (const ch of [...by.keys()].sort((a, b) => a - b)) {
       const vs = by.get(ch).sort((a, b) => a.v - b.v);
       const manual = vs.some((r) => String(r.text).trim()[0] === "¶");
@@ -147,6 +147,13 @@
         prev = txt;
       }
       if (!manual && groups.length > 1 && groups[groups.length - 1].length === 1) groups[groups.length - 2].push(groups.pop()[0]);
+      res.push({ ch, groups });
+    }
+    return res;
+  }
+  function chapters(rows, opt) {
+    let out = "";
+    for (const { ch, groups } of layout(rows, opt)) {
       out += DROP(ch, opt.capGap);
       groups.forEach((g, gi) => {
         const style = gi === 0 ? "VerseFirst" : "Verse", last = gi === groups.length - 1;
@@ -155,6 +162,38 @@
         out += P(style, runs, last && style === "Verse" ? opt.gap : 0);
         if (last && style === "VerseFirst" && opt.gap) out += SPACER;
       });
+    }
+    return out;
+  }
+
+  // ---- on-screen print view: the same chapters, paragraphs and Malay hyphenation as the Word export, as HTML ----
+  function soft(text, h) {                                   // text with U+00AD (soft hyphen) at the syllable breaks
+    if (!h) return esc(text);
+    let out = "", last = 0, m;
+    const re = /[A-Za-z]{7,}/g;
+    while ((m = re.exec(text))) {
+      out += esc(text.slice(last, m.index));
+      const w = m[0], k = w.toLowerCase();
+      if (!h.cache.has(k)) h.cache.set(k, h.ex[k] || pointsFor(k, h));
+      let a = 0;
+      for (const i of h.cache.get(k)) { out += esc(w.slice(a, i)) + "\u00AD"; a = i; }
+      out += esc(w.slice(a));
+      last = m.index + w.length;
+    }
+    return out + esc(text.slice(last));
+  }
+  function layoutHtml(rows, o) {                             // rows: one book of one translation [{ch, v, text}]
+    o = o || {};
+    const opt = { min: o.paraMin == null ? 4 : o.paraMin, max: o.paraMax == null ? 5 : o.paraMax };
+    const h = o.hyphenate === false ? null : makeHyph({ verses: { X: rows }, oldSpelling: o.oldSpelling, hyphenExceptions: o.hyphenExceptions, rootSplit: o.rootSplit });
+    let out = "";
+    const shown = o.chapter ? rows.filter((r) => +r.ch === +o.chapter) : rows;     // chapter: show one chapter only (hyphenation still learns from the whole book)
+    for (const { ch, groups } of layout(shown, opt)) {
+      out += `<section class="pchap" id="pc-${ch}"><span class="pdrop">${ch}</span>`;
+      groups.forEach((g, gi) => {
+        out += `<p class="pv${gi ? "" : " first"}">` + g.map((x, k) => (gi === 0 && k === 0 && +x.v === 1 ? "" : `<span class="vn">${x.v}</span>`) + soft(x.txt, h) + " ").join("") + "</p>";
+      });
+      out += "</section>";
     }
     return out;
   }
@@ -313,5 +352,6 @@
 
   root.fillBibleDocx = fillBibleDocx;
   root.FILL_CODES = CODES;
-  if (typeof module !== "undefined") module.exports = { fillBibleDocx, CODES };
+  root.BibleLayout = { html: layoutHtml };
+  if (typeof module !== "undefined") module.exports = { fillBibleDocx, CODES, BibleLayout: { html: layoutHtml } };
 })(typeof window !== "undefined" ? window : globalThis);

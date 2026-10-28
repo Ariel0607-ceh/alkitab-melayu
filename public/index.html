@@ -74,6 +74,14 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
 .dd.ch .do{text-align:center;padding:9px 0;border:1px solid var(--line);font-size:18px}.dd.ch .do.on{background:var(--gold);color:var(--bg);border-color:var(--gold)}
 @media(max-width:760px){.dd{position:static}.card{position:relative}.ddp,.dd.ch .ddp,.dd.cen .ddp{left:22px;right:22px;width:auto;top:auto;margin-top:8px}}
 .bkn{display:block;font:italic 500 17px "Cormorant Garamond",Georgia,serif;color:var(--ink);text-transform:none;letter-spacing:0;margin-top:2px}
+.paper{max-width:760px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:clamp(18px,4vw,44px);box-shadow:var(--sh)}
+.ptitle{font:600 clamp(22px,3vw,30px) "Times New Roman",Times,"Liberation Serif",serif;text-transform:uppercase;letter-spacing:.06em;text-align:center;margin:0 0 20px}
+.pcols{column-count:2;-webkit-column-count:2;column-gap:28px;-webkit-column-gap:28px;text-align:justify;hyphens:manual;font:400 15px/1.42 "Times New Roman",Times,"Liberation Serif",serif;orphans:2;widows:2}
+.pchap{margin:0 0 1.35em}
+.pdrop{float:left;font:700 4.2em/.8 "Times New Roman",Times,"Liberation Serif",serif;margin:.03em .09em 0 0}
+.pv{margin:0;text-indent:1.15em}.pv.first{text-indent:0}
+.vn{font:700 .72em Calibri,Arial,sans-serif;position:relative;top:-.38em;margin-right:.14em}
+@media(max-width:760px){.pcols{column-count:1;-webkit-column-count:1}}
 </style>
 </head>
 <body>
@@ -90,10 +98,11 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
   <div class="card">
     <div class="bar">
       <div><label>Kitab</label><select id="rBook"></select></div>
-      <div><label>Pasal</label><select id="rCh"></select></div>
+      <div><label>Fasal</label><select id="rCh"></select></div>
       <div style="margin-left:auto"><label>Abad</label><select id="rCen"><option value="">Semua</option><option value="17">Abad ke-17</option><option value="18">Abad ke-18</option><option value="19">Abad ke-19</option><option value="20">Abad ke-20</option><option value="21">Abad ke-21</option></select></div>
     </div>
     <div class="chips" id="rTr"></div>
+    <div class="chips" id="rMode"></div>
   </div>
   <div class="reading" id="reading"></div>
 </section>
@@ -122,12 +131,12 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
     <div class="card">
       <h3>Tambah ayat</h3>
       <div class="row"><div><label>Terjemahan</label><select id="aTr"></select></div></div>
-      <div class="row r3"><div><label>Kitab</label><select id="aBook"></select></div><div><label>Pasal</label><input id="aCh" type="number" min="1" value="1"></div><div><label>Ayat</label><input id="aV" type="number" min="1" value="1"></div></div>
+      <div class="row r3"><div><label>Kitab</label><select id="aBook"></select></div><div><label>Fasal</label><input id="aCh" type="number" min="1" value="1"></div><div><label>Ayat</label><input id="aV" type="number" min="1" value="1"></div></div>
       <div class="row"><div><label>Nama kitab dalam terjemahan ini</label><input id="aBN"></div></div>
       <div class="row"><div><label>Teks ayat</label><textarea id="aText" placeholder="Taip ayat di sini…"></textarea></div></div>
       <div class="row"><div><label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink)"><input type="checkbox" id="aPara" style="width:auto;padding:0;accent-color:var(--gold)"> ¶ Perenggan baharu bermula di ayat ini</label></div></div>
       <div class="bar"><button class="btn gold" id="aSave">Simpan &amp; seterusnya</button><span style="color:var(--mute);font-size:12px">Ctrl + Enter</span></div>
-      <h3 style="margin-top:28px" id="aHead">Ayat dalam pasal ini</h3>
+      <h3 style="margin-top:28px" id="aHead">Ayat dalam fasal ini</h3>
       <div id="aList"></div>
     </div>
   </div>
@@ -136,7 +145,7 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
     <div class="grid2" style="margin-top:0;grid-template-columns:1fr 1.4fr">
       <div>
         <div class="row r2"><div><label>Nama Inggeris (universal)</label><input id="bEn" placeholder="Genesis"></div><div><label>Nama Melayu (lalai)</label><input id="bName" placeholder="Kejadian"></div></div>
-        <div class="row r3"><div><label>Kod</label><input id="bCode" placeholder="GEN" maxlength="6"></div><div><label>Pasal</label><input id="bCh" type="number" min="1" value="1"></div><div><label>Kategori</label><select id="bGrp"></select></div></div>
+        <div class="row r3"><div><label>Kod</label><input id="bCode" placeholder="GEN" maxlength="6"></div><div><label>Fasal</label><input id="bCh" type="number" min="1" value="1"></div><div><label>Kategori</label><select id="bGrp"></select></div></div>
         <div class="bar"><button class="btn gold" id="bAdd">Tambah kitab</button><button class="btn hide" id="bCancel">Batal</button></div>
         <div style="height:24px"></div>
         <label>Kategori</label>
@@ -195,18 +204,18 @@ async function renderReader(){
  $("rBook").innerHTML=optBooks();if(!BK[u.b])u.b=BOOKS[0].c;$("rBook").value=u.b;$("rCh").innerHTML=optNums(BK[u.b].ch);$("rCh").value=Math.min(u.c,BK[u.b].ch);u.c=+$("rCh").value;ddSync();
  const list=S.tr.filter(t=>!cen||t.century===cen);
  $("rTr").innerHTML=list.length?list.map(t=>`<button class="chip ${u.sel.includes(t.id)?"on":""}" data-id="${t.id}">${esc(t.name)}<small>${esc(t.translator||"")}${t.year?" · "+esc(t.year):""} · abad ${t.century}</small></button>`).join(""):`<span style="color:var(--mute)">Tiada terjemahan. Tambah di ruang Admin.</span>`;
- const sel=S.tr.filter(t=>u.sel.includes(t.id)),b=BK[u.b],R=$("reading");if(sel.length)try{await getVerses(sel.map(t=>t.id),u.b,u.c)}catch(e){return R.innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
+ const sel=S.tr.filter(t=>u.sel.includes(t.id)),b=BK[u.b],R=$("reading");$("rMode").innerHTML=sel.length===1?modeChips():"";if(sel.length===1&&u.mode==="print")return renderPrint(sel[0]);if(sel.length)try{await getVerses(sel.map(t=>t.id),u.b,u.c)}catch(e){return R.innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
  if(!sel.length){R.innerHTML=`<div class="empty">Pilih satu atau lebih terjemahan untuk mula membaca.</div>`;return}
  const nums=new Set();sel.forEach(t=>{for(const k in S.v){const p=k.split("|");if(p[0]===t.id&&p[1]===u.b&&+p[2]===u.c)nums.add(+p[3])}});
  const vs=[...nums].sort((a,b)=>a-b);
  let h=`<div class="title">${esc(bn(b))} ${u.c}</div>`;
- if(!vs.length)h+=`<div class="empty">Belum ada ayat untuk pasal ini.</div>`;
+ if(!vs.length)h+=`<div class="empty">Belum ada ayat untuk fasal ini.</div>`;
  else{h+=`<div style="--n:${sel.length}"><div class="vhead" style="--n:${sel.length}"><span></span>${sel.map(t=>`<span>${esc(t.name)}<small>${esc(t.translator||"")}</small><em class="bkn">${esc(bkName(t.id,u.b))}</em></span>`).join("")}</div>`;
   h+=vs.map(v=>`<div class="vrow" style="--n:${sel.length}"><div class="vn">${v}</div>${sel.map(t=>{const x=S.v[vk(t.id,u.b,u.c,v)];return `<div class="vt ${x?"":"none"}"><span class="lbl">${esc(t.name)} · ${esc(bkName(t.id,u.b))}</span>${x?esc(x.replace(/^¶\s*/,"")):"—"}</div>`}).join("")}</div>`).join("")+`</div>`}
  h+=`<div class="pager"><button class="btn" id="prev">← Sebelum</button><button class="btn" id="next">Seterusnya →</button></div>`;
  R.innerHTML=h;$("prev").onclick=()=>step(-1);$("next").onclick=()=>step(1);
 }
-function step(d){const u=S.ui,i=BOOKS.findIndex(b=>b.c===u.b);let c=u.c+d,bi=i;
+function step(d){const u=S.ui,i=BOOKS.findIndex(b=>b.c===u.b);if(u.mode==="print"&&!u.one&&u.sel.length===1){u.b=BOOKS[Math.min(BOOKS.length-1,Math.max(0,i+d))].c;u.c=1;save();renderReader();scrollTo(0,0);return}let c=u.c+d,bi=i;
  if(c<1){bi=Math.max(0,i-1);c=bi===i?1:BOOKS[bi].ch}else if(c>BOOKS[i].ch){bi=Math.min(BOOKS.length-1,i+1);c=bi===i?BOOKS[i].ch:1}
  u.b=BOOKS[bi].c;u.c=c;save();renderReader();scrollTo(0,0)}
 $("rBook").onchange=e=>{S.ui.b=e.target.value;S.ui.c=1;save();renderReader()};
@@ -235,7 +244,7 @@ $("aV").addEventListener("input",fillText);
 $("aBook").addEventListener("change",()=>{const m=BK[$("aBook").value].ch;$("aCh").max=m;if(+$("aCh").value>m)$("aCh").value=m;renderList()});
 async function saveVerse(){
  const t=$("aTr").value,b=$("aBook").value,c=+$("aCh").value,v=+$("aV").value,x0=$("aText").value.trim().replace(/^¶\s*/,""),x=x0&&$("aPara").checked?"¶ "+x0:x0;
- if(!t)return toast("Tambah terjemahan dahulu");if(!c||!v)return toast("Isi pasal dan ayat");if(!x)return toast("Teks ayat kosong");
+ if(!t)return toast("Tambah terjemahan dahulu");if(!c||!v)return toast("Isi fasal dan ayat");if(!x)return toast("Teks ayat kosong");
  try{await op({op:"verse",tid:t,book:b,ch:c,v,text:x})}catch(e){return toast(e.message)}S.v[vk(t,b,c,v)]=x;S.ui.b=b;S.ui.c=c;if(!S.ui.sel.includes(t)&&S.ui.sel.length<4)S.ui.sel.push(t);save();
  $("aV").value=v+1;fillText();renderAdmin();$("aText").focus();toast(`Disimpan — ${bn(BK[b])} ${c}:${v}`)}
 $("aSave").onclick=saveVerse;
@@ -264,7 +273,7 @@ function resetB(){bEdit=null;["bName","bEn","bCode"].forEach(i=>$(i).value="");$
 $("tYear").oninput=()=>{const c=cenOf($("tYear").value);if(c>=17&&c<=21)$("tCen").value=String(c)};
 $("tCancel").onclick=resetT;$("bCancel").onclick=resetB;
 function renderBooks(){const kg=$("bGrp").value;$("bGrp").innerHTML=S.groups.map(g=>`<option>${esc(g)}</option>`).join("");if(S.groups.includes(kg))$("bGrp").value=kg;
- $("bList").innerHTML=GROUPS.map(([g,bs])=>`<div class="item" style="border-bottom-color:var(--gold)"><div><p style="font-size:22px;color:var(--gold)">${esc(g)}</p><small>${bs.length} kitab</small></div><div class="acts"><button class="btn sm" data-gen="${esc(g)}">Ubah</button><button class="btn sm del" data-gdel="${esc(g)}">Padam</button></div></div>`+bs.map(b=>`<div class="item"><div><p>${esc(bn(b))}</p><small>${esc(b.n)} · ${esc(b.c)} · ${b.ch} pasal</small></div><div class="acts"><button class="btn sm" data-up="${esc(b.c)}">↑</button><button class="btn sm" data-dn="${esc(b.c)}">↓</button><button class="btn sm" data-bed="${esc(b.c)}">Ubah</button><button class="btn sm del" data-bdel="${esc(b.c)}">Padam</button></div></div>`).join("")).join("")}
+ $("bList").innerHTML=GROUPS.map(([g,bs])=>`<div class="item" style="border-bottom-color:var(--gold)"><div><p style="font-size:22px;color:var(--gold)">${esc(g)}</p><small>${bs.length} kitab</small></div><div class="acts"><button class="btn sm" data-gen="${esc(g)}">Ubah</button><button class="btn sm del" data-gdel="${esc(g)}">Padam</button></div></div>`+bs.map(b=>`<div class="item"><div><p>${esc(bn(b))}</p><small>${esc(b.n)} · ${esc(b.c)} · ${b.ch} fasal</small></div><div class="acts"><button class="btn sm" data-up="${esc(b.c)}">↑</button><button class="btn sm" data-dn="${esc(b.c)}">↓</button><button class="btn sm" data-bed="${esc(b.c)}">Ubah</button><button class="btn sm del" data-bdel="${esc(b.c)}">Padam</button></div></div>`).join("")).join("")}
 $("bAdd").onclick=async()=>{const n=$("bName").value.trim(),c=$("bCode").value.trim().toUpperCase().replace(/[|\s]/g,""),ch=Math.max(1,+$("bCh").value||1),g=$("bGrp").value;
  if(!n||!c||!g)return toast("Nama, kod dan kategori diperlukan");
  const was=bEdit;try{await op({op:"book",old:was,c,n,ch,g,en:$("bEn").value.trim()})}catch(e){return toast(e.message)}
@@ -311,7 +320,20 @@ $("xGo").onclick=async()=>{const tid=$("xTr").value,st=$("xSt"),btn=$("xGo");if(
   st.textContent=`Siap. ${66-empty} kitab ada ayat`+(empty?`, ${empty} kitab ${$("xOnly").value==="1"?"dilangkau":"tanpa terjemahan"}.`:".")}
  catch(e){st.textContent="Gagal: "+e.message}
  btn.disabled=false};
-/* custom dropdowns */
+
+/* print view */
+function modeChips(){const m=S.ui.mode==="print"?"print":"parallel";return `<button class="chip ${m==="parallel"?"on":""}" data-mode="parallel">Selari<small>bandingkan terjemahan</small></button><button class="chip ${m==="print"?"on":""}" data-mode="print">Cetakan<small>susun atur seperti dokumen Word</small></button>`+(m==="print"?`<button class="chip ${S.ui.one?"on":""}" data-one="1">Sefasal<small>${S.ui.one?"satu fasal sahaja: hidup":"seluruh kitab: mati"}</small></button>`:"")}
+$("rMode").onclick=e=>{const c=e.target.closest(".chip");if(!c)return;if(c.dataset.one)S.ui.one=!S.ui.one;else S.ui.mode=c.dataset.mode;save();renderReader()};
+async function renderPrint(t){const u=S.ui,R=$("reading");R.innerHTML='<div class="empty">Memuatkan…</div>';
+ let rows;try{rows=await api(`/api/export?tid=${encodeURIComponent(t.id)}&book=${encodeURIComponent(u.b)}`)}catch(e){return R.innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
+ const has=rows.some(r=>!u.one||+r.ch===+u.c);
+ const body=has?BibleLayout.html(rows,{chapter:u.one?u.c:0}):'<p class="pv first"><span class="vn">1</span>No Translation Available</p>';
+ const nav=u.one?["Fasal sebelum","Fasal seterusnya"]:["Kitab sebelum","Kitab seterusnya"];
+ R.innerHTML=`<div class="paper"><h2 class="ptitle">${esc(bkName(t.id,u.b))}</h2><div class="pcols">${body}</div></div><div class="pager"><button class="btn" id="prev">← ${nav[0]}</button><button class="btn" id="next">${nav[1]} →</button></div>`;
+ $("prev").onclick=()=>step(-1);$("next").onclick=()=>step(1);
+ if(!u.one&&u.c>1){const el=$("pc-"+u.c);if(el)el.scrollIntoView({block:"start"})}}
+
+ /* custom dropdowns */
 const DDS=[];
 function closeDD(){document.querySelectorAll(".dd.open").forEach(d=>d.classList.remove("open"))}
 function ddSync(){DDS.forEach(f=>f())}
