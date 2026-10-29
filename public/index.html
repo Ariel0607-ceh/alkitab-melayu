@@ -78,7 +78,16 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
 .ptitle{font:600 clamp(22px,3vw,30px) "Times New Roman",Times,"Liberation Serif",serif;text-transform:uppercase;letter-spacing:.06em;text-align:center;margin:0 0 20px}
 .pcols{column-count:2;-webkit-column-count:2;column-gap:28px;-webkit-column-gap:28px;text-align:justify;hyphens:manual;font:400 15px/1.42 "Times New Roman",Times,"Liberation Serif",serif;orphans:2;widows:2}
 .pchap{margin:0 0 1.35em}
-.pdrop{float:left;font:700 5.15em/.78 "Times New Roman",Times,"Liberation Serif",serif;margin:0 .10em 0 0;position:relative;top:.008em}
+.pdrop{float:left;font:700 4.8em/.837 "Times New Roman",Times,"Liberation Serif",serif;margin:0 .114em 0 0;position:relative;top:-.014em}
+.tg{position:relative;display:flex;align-items:center;gap:12px;cursor:pointer;padding:9px 16px 9px 12px;border:1px solid var(--line);border-radius:14px;transition:.2s;user-select:none}
+.tg:hover{border-color:var(--gold)}
+.tg input{position:absolute;opacity:0;pointer-events:none}
+.sw{flex:none;width:40px;height:22px;border-radius:99px;background:var(--line);position:relative;transition:.25s}
+.sw:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--ink);opacity:.55;transition:.25s}
+.tg input:checked+.sw{background:var(--gold)}
+.tg input:checked+.sw:after{left:21px;background:var(--bg);opacity:1}
+.tg input:focus-visible+.sw{box-shadow:0 0 0 3px var(--goldbg)}
+.tl{display:flex;flex-direction:column;font:500 14px/1.2 Inter,sans-serif}.tl small{color:var(--mute);font-size:11px;font-weight:400;margin-top:2px}
 .pcols.onecol{column-count:1;-webkit-column-count:1;max-width:34em;margin:0 auto}
 .pcols.nohy{hyphens:none;-webkit-hyphens:none}
 .pv{margin:0;text-indent:1.15em}.pv.first{text-indent:0}
@@ -324,11 +333,9 @@ $("xGo").onclick=async()=>{const tid=$("xTr").value,st=$("xSt"),btn=$("xGo");if(
  btn.disabled=false};
 
 /* print view */
-function modeChips(){const u=S.ui,m=u.mode==="print"?"print":"parallel";
- let h=`<button class="chip ${m==="parallel"?"on":""}" data-mode="parallel">Selari<small>bandingkan terjemahan</small></button><button class="chip ${m==="print"?"on":""}" data-mode="print">Cetakan<small>susun atur seperti dokumen Word</small></button>`;
- if(m==="print")h+=`<button class="chip ${u.one?"on":""}" data-one="1">Sefasal<small>${u.one?"satu fasal sahaja: hidup":"seluruh kitab: mati"}</small></button><button class="chip ${u.oneCol?"":"on"}" data-col="1">2 Lajur<small>${u.oneCol?"satu lajur: mati":"dua lajur: hidup"}</small></button><button class="chip ${u.noHy?"":"on"}" data-hy="1">Pemenggalan<small>${u.noHy?"perkataan tidak dipecah: mati":"pecah perkataan di hujung baris: hidup"}</small></button>`;
- return h}
-$("rMode").onclick=e=>{const c=e.target.closest(".chip");if(!c)return;const d=c.dataset,u=S.ui;if(d.one)u.one=!u.one;else if(d.col)u.oneCol=!u.oneCol;else if(d.hy)u.noHy=!u.noHy;else u.mode=d.mode;save();renderReader()};
+function modeChips(){const u=S.ui,p=u.mode==="print",tg=(k,on,n,s)=>`<label class="tg"><input type="checkbox" data-t="${k}" ${on?"checked":""}><i class="sw"></i><span class="tl">${n}<small>${s}</small></span></label>`;
+ return tg("print",p,"Lembaran","susun atur kitab bercetak")+(p?tg("one",!!u.one,"Fasal Tunggal","satu fasal pada satu masa")+tg("col",!u.oneCol,"Lajur Kembar","dua lajur seperti halaman kitab")+tg("hy",!u.noHy,"Titian Kata","patah kata di hujung baris"):"")}
+$("rMode").onchange=e=>{const k=e.target.dataset.t,v=e.target.checked,u=S.ui;if(k==="print")u.mode=v?"print":"parallel";else if(k==="one")u.one=v;else if(k==="col")u.oneCol=!v;else if(k==="hy")u.noHy=!v;else return;save();renderReader()};
 async function renderPrint(t){const u=S.ui,R=$("reading");R.innerHTML='<div class="empty">Memuatkan…</div>';
  let rows;try{rows=await api(`/api/export?tid=${encodeURIComponent(t.id)}&book=${encodeURIComponent(u.b)}`)}catch(e){return R.innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
  const has=rows.some(r=>!u.one||+r.ch===+u.c);
