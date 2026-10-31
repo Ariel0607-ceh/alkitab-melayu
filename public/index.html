@@ -93,6 +93,41 @@ h3{font:500 26px "Cormorant Garamond",serif;margin:0 0 16px}
 .pv{margin:0;text-indent:1.15em}.pv.first{text-indent:0}
 .vn{font:700 .72em Calibri,Arial,sans-serif;position:relative;top:-.38em;margin-right:.14em}
 @media(max-width:760px){.pcols{column-count:1;-webkit-column-count:1}}
+
+/* ---- responsive: phones, tablets and any width ---- */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+main,.card,.grid2>*,.row>div,.item>div{min-width:0}
+img,svg,video,canvas{max-width:100%;height:auto}
+@media(max-width:900px){.grid2{grid-template-columns:1fr!important}}
+@media(max-width:760px){
+ header{padding:10px 14px;gap:6px 8px;flex-wrap:wrap}
+ nav{margin-left:auto}
+ .logo{font-size:20px;white-space:nowrap}
+ nav{gap:4px}nav a{padding:7px 12px;font-size:12.5px}
+ main{padding:16px 14px 64px}
+ .hero{padding:6px 0 18px}.hero h1{font-size:clamp(30px,9vw,40px)}.hero p{font-size:14px}
+ .card{padding:16px;border-radius:16px}
+ input,select,textarea{font-size:16px}
+ .btn{min-height:40px}.btn.sm{padding:8px 14px}
+ #v-baca .card>.bar{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+ #v-baca .card>.bar>div:first-child{grid-column:1/-1}
+ #v-baca .card>.bar>div{margin-left:0!important}
+ .dd,.ddb{width:100%;min-width:0}.ddb{padding:12px 14px;font-size:19px}
+ .ddp,.dd.ch .ddp,.dd.cen .ddp{left:12px;right:12px}
+ #rTr .chip{flex:1 1 100%}
+ #rMode{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ #rMode .tg:first-child{grid-column:1/-1}.tg{padding:10px 12px}
+ .paper{padding:18px 16px}.pcols{font-size:16px}
+ .pager{gap:10px}.pager .btn{flex:1;padding:12px 8px}
+ .row.r2{grid-template-columns:1fr}
+ .row.r3{grid-template-columns:1fr 1fr}.row.r3>div:first-child{grid-column:1/-1}
+ textarea{min-height:130px}
+ .item{flex-wrap:wrap}.item>div:first-child{flex:1 1 180px}.acts{gap:8px}
+}
+@media(max-width:420px){.logo{font-size:18px}nav a{padding:6px 10px;font-size:12px}}
+@media(max-width:380px){#rMode{grid-template-columns:1fr}}
+@media(pointer:coarse){.do{padding:11px 12px}.dd.ch .do{padding:12px 0}}
+
 </style>
 </head>
 <body>
