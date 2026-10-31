@@ -214,7 +214,7 @@ async function renderReader(){
  const u=S.ui,cen=$("rCen").value;
  $("rBook").innerHTML=optBooks();if(!BK[u.b])u.b=BOOKS[0].c;$("rBook").value=u.b;$("rCh").innerHTML=optNums(BK[u.b].ch);$("rCh").value=Math.min(u.c,BK[u.b].ch);u.c=+$("rCh").value;ddSync();
  const list=S.tr.filter(t=>!cen||t.century===cen);
- $("rTr").innerHTML=list.length?list.map(t=>`<button class="chip ${u.sel.includes(t.id)?"on":""}" data-id="${t.id}">${esc(t.name)}<small>${esc(t.translator||"")}${t.year?" · "+esc(t.year):""} · abad ${t.century}</small></button>`).join(""):`<span style="color:var(--mute)">Tiada terjemahan. Tambah di ruang Admin.</span>`;
+ $("rTr").innerHTML=list.length?list.map(t=>`<button class="chip ${u.sel.includes(t.id)?"on":""}" data-id="${t.id}">${esc(t.name)}<small>${esc(t.translator||"")}${t.year?" · "+esc(t.year):""} · Abad ${t.century}</small></button>`).join(""):`<span style="color:var(--mute)">Tiada terjemahan. Tambah di ruang Admin.</span>`;
  const sel=S.tr.filter(t=>u.sel.includes(t.id)),b=BK[u.b],R=$("reading");$("rMode").innerHTML=sel.length===1?modeChips():"";if(sel.length===1&&u.mode==="print")return renderPrint(sel[0]);if(sel.length)try{await getVerses(sel.map(t=>t.id),u.b,u.c)}catch(e){return R.innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
  if(!sel.length){R.innerHTML=`<div class="empty">Pilih satu atau lebih terjemahan untuk mula membaca.</div>`;return}
  const nums=new Set();sel.forEach(t=>{for(const k in S.v){const p=k.split("|");if(p[0]===t.id&&p[1]===u.b&&+p[2]===u.c)nums.add(+p[3])}});
@@ -240,7 +240,7 @@ async function renderAdmin(){
  $("aTr").innerHTML=S.tr.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("")||`<option value="">— tambah terjemahan dahulu —</option>`;
  if(S.tr.some(t=>t.id===keepT))$("aTr").value=keepT;
  let kb=$("aBook").value;if(!BK[kb])kb=BK[S.ui.b]?S.ui.b:BOOKS[0].c;$("aBook").innerHTML=optBooks();$("aBook").value=kb;
- $("tList").innerHTML=S.tr.map(t=>`<div class="item"><div><p>${esc(t.name)}</p><small>${esc(t.translator||"—")}${t.year?" · "+esc(t.year):""} · abad ${t.century} · ${t.cnt} ayat</small></div><div class="acts"><button class="btn sm" data-ed="${t.id}">Ubah</button><button class="btn sm del" data-del="${t.id}">Padam</button></div></div>`).join("")||`<small style="color:var(--mute)">Belum ada terjemahan.</small>`;
+ $("tList").innerHTML=S.tr.map(t=>`<div class="item"><div><p>${esc(t.name)}</p><small>${esc(t.translator||"—")}${t.year?" · "+esc(t.year):""} · Abad ${t.century} · ${t.cnt} ayat</small></div><div class="acts"><button class="btn sm" data-ed="${t.id}">Ubah</button><button class="btn sm del" data-del="${t.id}">Padam</button></div></div>`).join("")||`<small style="color:var(--mute)">Belum ada terjemahan.</small>`;
  renderList();renderBooks();ddSync();fillBN();fillX();
 }
 async function renderList(){
@@ -333,14 +333,15 @@ $("xGo").onclick=async()=>{const tid=$("xTr").value,st=$("xSt"),btn=$("xGo");if(
  btn.disabled=false};
 
 /* print view */
-function modeChips(){const u=S.ui,p=u.mode==="print",tg=(k,on,n,s)=>`<label class="tg"><input type="checkbox" data-t="${k}" ${on?"checked":""}><i class="sw"></i><span class="tl">${n}<small>${s}</small></span></label>`;
- return tg("print",p,"Lembaran","susun atur kitab bercetak")+(p?tg("one",!!u.one,"Fasal Tunggal","satu fasal pada satu masa")+tg("col",!u.oneCol,"Lajur Kembar","dua lajur seperti halaman kitab")+tg("hy",!u.noHy,"Titian Kata","patah kata di hujung baris"):"")}
-$("rMode").onchange=e=>{const k=e.target.dataset.t,v=e.target.checked,u=S.ui;if(k==="print")u.mode=v?"print":"parallel";else if(k==="one")u.one=v;else if(k==="col")u.oneCol=!v;else if(k==="hy")u.noHy=!v;else return;save();renderReader()};
+function modeChips(){const u=S.ui,cmp=u.mode!=="print",tg=(k,on,n)=>`<label class="tg"><input type="checkbox" data-t="${k}" ${on?"checked":""}><i class="sw"></i><span class="tl">${n}</span></label>`;
+ return tg("cmp",cmp,"Pancapustaka")+(cmp?"":tg("one",!!u.one,"Sefasal")+tg("col",!u.oneCol,"Dwilajur")+tg("hy",!u.noHy,"Nirhad"))}
+$("rMode").onchange=e=>{const k=e.target.dataset.t,v=e.target.checked,u=S.ui;if(k==="cmp")u.mode=v?"parallel":"print";else if(k==="one")u.one=v;else if(k==="col")u.oneCol=!v;else if(k==="hy")u.noHy=!v;else return;save();renderReader()};
+
 async function renderPrint(t){const u=S.ui,R=$("reading");R.innerHTML='<div class="empty">Memuatkan…</div>';
  let rows;try{rows=await api(`/api/export?tid=${encodeURIComponent(t.id)}&book=${encodeURIComponent(u.b)}`)}catch(e){return R.innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
  const has=rows.some(r=>!u.one||+r.ch===+u.c);
  const body=has?BibleLayout.html(rows,{chapter:u.one?u.c:0}):'<p class="pv first"><span class="vn">1</span>No Translation Available</p>';
- const nav=u.one?["Fasal sebelum","Fasal seterusnya"]:["Kitab sebelum","Kitab seterusnya"];
+ const nav=u.one?["Fasal sebelum","Fasal seterusnya"]:["Prapustaka","Pascapustaka"];
  R.innerHTML=`<div class="paper"><h2 class="ptitle">${esc(bkName(t.id,u.b))}</h2><div class="pcols${u.oneCol?" onecol":""}${u.noHy?" nohy":""}">${body}</div></div><div class="pager"><button class="btn" id="prev">← ${nav[0]}</button><button class="btn" id="next">${nav[1]} →</button></div>`;
  $("prev").onclick=()=>step(-1);$("next").onclick=()=>step(1);
  if(!u.one&&u.c>1){const el=$("pc-"+u.c);if(el)el.scrollIntoView({block:"start"})}}
