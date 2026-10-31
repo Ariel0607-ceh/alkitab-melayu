@@ -128,6 +128,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
 @media(max-width:380px){#rMode{grid-template-columns:1fr}}
 @media(pointer:coarse){.do{padding:11px 12px}.dd.ch .do{padding:12px 0}}
 
+/* ---- title wrap, comparison-view title font, Dwilajur note ---- */
+.hero h1{text-wrap:balance}.nb{white-space:nowrap}
+.title{font:600 clamp(22px,3vw,30px) "Times New Roman",Times,"Liberation Serif",serif;text-transform:uppercase;letter-spacing:.06em;text-align:center;margin:10px 0 24px}
+.mn{font-style:normal;text-transform:none;letter-spacing:0;font-size:11px;opacity:.75;margin-left:6px}
+@media(max-width:760px){.tg.wide{opacity:.45;pointer-events:none}}
+
 </style>
 </head>
 <body>
@@ -140,7 +146,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 </header>
 <main>
 <section id="v-baca">
-  <div class="hero"><h1><span style="color:var(--gold)">Alkitab</span> dalam Bahasa Melayu</h1><p>Terjemahan dari abad ke-17 hingga ke-21</p><div class="orn"></div></div>
+  <div class="hero"><h1><span style="color:var(--gold)">Alkitab</span> dalam <span class="nb">Bahasa Melayu</span></h1><p>Terjemahan dari abad ke-17 hingga ke-21</p><div class="orn"></div></div>
   <div class="card">
     <div class="bar">
       <div><label>Kitab</label><select id="rBook"></select></div>
@@ -368,8 +374,8 @@ $("xGo").onclick=async()=>{const tid=$("xTr").value,st=$("xSt"),btn=$("xGo");if(
  btn.disabled=false};
 
 /* print view */
-function modeChips(){const u=S.ui,cmp=u.mode==="parallel",tg=(k,on,n)=>`<label class="tg"><input type="checkbox" data-t="${k}" ${on?"checked":""}><i class="sw"></i><span class="tl">${n}</span></label>`;
- return tg("cmp",cmp,"Pancapustaka")+(cmp?"":tg("one",!!u.one,"Sefasal")+tg("col",!!u.twoCol,"Dwilajur")+tg("hy",!!u.hy,"Nirhad"))}
+function modeChips(){const u=S.ui,cmp=u.mode==="parallel",tg=(k,on,n,c)=>`<label class="tg ${c||""}"><input type="checkbox" data-t="${k}" ${on?"checked":""}><i class="sw"></i><span class="tl">${n}</span></label>`;
+ return tg("cmp",cmp,"Pancapustaka")+(cmp?"":tg("one",!!u.one,"Sefasal")+tg("col",!!u.twoCol,'Dwilajur <em class="mn">(min. 761 px)</em>',"wide")+tg("hy",!!u.hy,"Nirhad"))}
 $("rMode").onchange=e=>{const k=e.target.dataset.t,v=e.target.checked,u=S.ui;if(k==="cmp")u.mode=v?"parallel":"print";else if(k==="one")u.one=v;else if(k==="col")u.twoCol=v;else if(k==="hy")u.hy=v;else return;save();renderReader()}; 
 
 async function renderPrint(t){const u=S.ui,R=$("reading");R.innerHTML='<div class="empty">Memuatkan…</div>';
