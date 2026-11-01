@@ -135,6 +135,16 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .mn{font-style:normal;text-transform:none;letter-spacing:0;font-size:11px;opacity:.75;margin-left:6px}
 @media(max-width:760px){.tg.wide{opacity:.45;pointer-events:none}}
 
+/* Default shadow (Dark Mode) */
+.hero-logo {
+  filter: drop-shadow(0 0 20px var(--gold));
+}
+
+/* Light Mode Toggle */
+[data-theme="light"] .hero-logo {
+  filter: none; 
+}
+
 </style>
 </head>
 <body>
@@ -152,7 +162,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
   <section id="v-baca">
     <div class="hero">
       <div style="text-align: center; margin-bottom: 20px;">
-        <img src="AMLog.png" alt="Logo Utama" style="height: 200px; width: auto; filter: drop-shadow(0 0 20px var(--gold));">
+        <img src="AMLog.png" alt="Logo Utama" class="hero-logo" style="height: 200px; width: auto;">
       </div>
       <h1><span style="color:var(--gold)">Alkitab</span> dalam <span class="nb">Bahasa Melayu</span></h1>
       <p>Terjemahan dari abad ke-17 hingga ke-21</p>
