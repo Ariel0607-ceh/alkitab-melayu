@@ -140,28 +140,45 @@ img,svg,video,canvas{max-width:100%;height:auto}
 <body>
 <header>
   <div class="logo" style="display: flex; align-items: center; gap: 10px;">
-  <img src="AMLog.png" alt="Logo" style="height: 32px; width: auto; filter: drop-shadow(0 0 8px var(--gold));">
-  <span>Alkitab <b>Melayu</b></span>
-</div>
+    <img src="AMLog.png" alt="Logo" style="height: 32px; width: auto;">
+    <span>Alkitab <b>Melayu</b></span>
+  </div>
   <nav>
     <a href="#baca" id="n-baca">Baca</a><a href="#admin" id="n-admin">Admin</a>
     <a id="out" class="hide">Keluar</a><a id="theme" title="Tema" style="padding:8px 12px">◐</a>
   </nav>
 </header>
 <main>
-<section id="v-baca">
-  <div class="hero"><h1><span style="color:var(--gold)">Alkitab</span> dalam <span class="nb">Bahasa Melayu</span></h1><p>Terjemahan dari abad ke-17 hingga ke-21</p><div class="orn"></div></div>
-  <div class="card">
-    <div class="bar">
-      <div><label>Kitab</label><select id="rBook"></select></div>
-      <div><label>Fasal</label><select id="rCh"></select></div>
-      <div style="margin-left:auto"><label>Abad</label><select id="rCen"><option value="">Semua</option><option value="17">Abad ke-17</option><option value="18">Abad ke-18</option><option value="19">Abad ke-19</option><option value="20">Abad ke-20</option><option value="21">Abad ke-21</option></select></div>
+  <section id="v-baca">
+    <div class="hero">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="AMLog.png" alt="Logo Utama" style="height: 100px; width: auto; filter: drop-shadow(0 0 20px var(--gold));">
+      </div>
+      <h1><span style="color:var(--gold)">Alkitab</span> dalam <span class="nb">Bahasa Melayu</span></h1>
+      <p>Terjemahan dari abad ke-17 hingga ke-21</p>
+      <div class="orn"></div>
     </div>
-    <div class="chips" id="rTr"></div>
-    <div class="chips" id="rMode"></div>
-  </div>
-  <div class="reading" id="reading"></div>
-</section>
+    <div class="card">
+      <div class="bar">
+        <div><label>Kitab</label><select id="rBook"></select></div>
+        <div><label>Fasal</label><select id="rCh"></select></div>
+        <div style="margin-left:auto">
+          <label>Abad</label>
+          <select id="rCen">
+            <option value="">Semua</option>
+            <option value="17">Abad ke-17</option>
+            <option value="18">Abad ke-18</option>
+            <option value="19">Abad ke-19</option>
+            <option value="20">Abad ke-20</option>
+            <option value="21">Abad ke-21</option>
+          </select>
+        </div>
+      </div>
+      <div class="chips" id="rTr"></div>
+      <div class="chips" id="rMode"></div>
+    </div>
+    <div class="reading" id="reading"></div>
+  </section>
 
 <section id="v-login" class="hide">
   <div class="hero"><h1>Log Masuk Admin</h1><p>Hanya untuk penyelenggara</p><div class="orn"></div></div>
